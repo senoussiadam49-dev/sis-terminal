@@ -1,0 +1,2035 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<title>SIS — Signal Intelligence Terminal</title>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@300;400;500;600;700&family=Bebas+Neue&family=IBM+Plex+Sans:wght@300;400;500;600&display=swap');
+:root{
+  --bg:#03060A;--bg1:#060B10;--bg2:#080E15;--bg3:#0C1520;--bg4:#111C2A;
+  --b1:#0F1E2E;--b2:#162333;--b3:#1E3045;
+  --g:#00E5A0;--g2:#00B87A;--gdim:rgba(0,229,160,0.06);--gbdr:rgba(0,229,160,0.18);
+  --am:#F5A623;--adim:rgba(245,166,35,0.07);--abdr:rgba(245,166,35,0.2);
+  --rd:#FF3B5C;--rdim:rgba(255,59,92,0.07);--rbdr:rgba(255,59,92,0.2);
+  --bl:#38BDF8;--pu:#818CF8;
+  --t1:#D4E0EA;--t2:#6A8499;--t3:#2E4459;--t4:#162333;
+  --mono:'IBM Plex Mono',monospace;--sans:'IBM Plex Sans',sans-serif;--disp:'Bebas Neue',sans-serif;
+  --nav:52px;
+}
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent;}
+body{background:var(--bg);color:var(--t1);font-family:var(--mono);min-height:100vh;overflow-x:hidden;}
+.atm{position:fixed;inset:0;pointer-events:none;z-index:0;background-image:linear-gradient(rgba(0,229,160,0.012) 1px,transparent 1px),linear-gradient(90deg,rgba(0,229,160,0.012) 1px,transparent 1px);background-size:44px 44px;}
+.app{position:relative;z-index:1;max-width:520px;margin:0 auto;padding-bottom:calc(var(--nav)+16px);}
+.topbar{position:sticky;top:0;z-index:100;display:flex;align-items:center;justify-content:space-between;padding:0 14px;height:var(--nav);background:rgba(3,6,10,.96);border-bottom:1px solid var(--b1);backdrop-filter:blur(12px);}
+.logo{font-family:var(--disp);font-size:20px;letter-spacing:3px;color:var(--g);}
+.logo-sub{font-size:6px;letter-spacing:3px;text-transform:uppercase;color:var(--t3);}
+.top-r{display:flex;align-items:center;gap:8px;}
+.clk{font-family:var(--disp);font-size:16px;color:var(--t3);letter-spacing:2px;}
+.ib{background:transparent;border:1px solid var(--b2);border-radius:5px;padding:5px 9px;color:var(--t2);font-family:var(--mono);font-size:8px;letter-spacing:1.5px;text-transform:uppercase;cursor:pointer;transition:all .12s;}
+.ib:hover{border-color:var(--gbdr);color:var(--g);}
+.pills{display:flex;gap:5px;padding:8px 14px 0;overflow-x:auto;scrollbar-width:none;}
+.pills::-webkit-scrollbar{display:none;}
+.pill{display:flex;align-items:center;gap:4px;padding:3px 8px;background:var(--bg2);border:1px solid var(--b2);border-radius:20px;font-size:7px;letter-spacing:1.5px;text-transform:uppercase;color:var(--t3);white-space:nowrap;flex-shrink:0;}
+.pill .dot{width:5px;height:5px;border-radius:50%;background:var(--t4);flex-shrink:0;}
+.dot.live{background:var(--g)!important;animation:blink 2s ease-in-out infinite;}
+@keyframes blink{0%,100%{opacity:1}50%{opacity:.3}}
+.bnav{position:fixed;bottom:0;left:50%;transform:translateX(-50%);width:100%;max-width:520px;z-index:100;display:flex;background:rgba(6,11,16,.98);border-top:1px solid var(--b2);backdrop-filter:blur(16px);}
+.nb{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px;padding:6px 4px;cursor:pointer;border:none;background:transparent;color:var(--t3);transition:color .12s;min-height:var(--nav);position:relative;}
+.nb.active{color:var(--g);}
+.nb .ni{font-size:15px;line-height:1;}
+.nb .nl{font-size:6px;letter-spacing:1.5px;text-transform:uppercase;font-family:var(--mono);}
+.nbi{position:absolute;top:0;left:50%;transform:translateX(-50%);width:18px;height:2px;background:var(--g);border-radius:0 0 2px 2px;opacity:0;}
+.nb.active .nbi{opacity:1;}
+.panel{display:none;padding:12px 14px;animation:fi .18s ease;}
+.panel.active{display:block;}
+@keyframes fi{from{opacity:0;transform:translateY(5px)}to{opacity:1;transform:translateY(0)}}
+.ph{margin-bottom:12px;display:flex;align-items:flex-end;justify-content:space-between;}
+.pt{font-family:var(--disp);font-size:26px;letter-spacing:2px;color:#fff;line-height:1;}
+.pt span{color:var(--g);}
+.ps{font-size:7px;letter-spacing:2px;text-transform:uppercase;color:var(--t3);margin-top:3px;}
+.card{background:var(--bg1);border:1px solid var(--b1);border-radius:8px;padding:12px 14px;margin-bottom:10px;}
+.ct{font-size:7px;letter-spacing:2.5px;text-transform:uppercase;color:var(--g);font-weight:600;margin-bottom:10px;}
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:5px;padding:7px 13px;border-radius:5px;border:1px solid;cursor:pointer;font-family:var(--mono);font-size:9px;font-weight:600;letter-spacing:1.5px;text-transform:uppercase;transition:all .12s;white-space:nowrap;}
+.btn:disabled{opacity:.35;cursor:not-allowed;}
+.btn-full{width:100%;}
+.btn-g{background:var(--g);border-color:var(--g);color:var(--bg);}
+.btn-g:hover:not(:disabled){background:var(--g2);}
+.btn-gh{background:transparent;border-color:var(--b3);color:var(--t2);}
+.btn-gh:hover:not(:disabled){border-color:var(--gbdr);color:var(--g);}
+.btn-sm{padding:5px 10px;font-size:8px;}
+.field{background:var(--bg);border:1px solid var(--b2);border-radius:5px;padding:9px 12px;font-family:var(--mono);font-size:12px;color:var(--t1);outline:none;transition:border-color .15s;width:100%;}
+.field:focus{border-color:var(--g);}
+.field::placeholder{color:var(--t4);}
+.fsel{appearance:none;cursor:pointer;padding-right:28px;background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='6'%3E%3Cpath d='M0 0l5 6 5-6z' fill='%232E4459'/%3E%3C/svg%3E");background-repeat:no-repeat;background-position:right 10px center;}
+.fl{font-size:7px;letter-spacing:2px;text-transform:uppercase;color:var(--t3);display:block;margin-bottom:5px;}
+.wli{display:flex;align-items:center;justify-content:space-between;padding:9px 0;border-bottom:1px solid var(--b1);cursor:pointer;}
+.wli:last-child{border-bottom:none;}
+.wli-l{display:flex;align-items:center;gap:10px;}
+.wli-rk{font-size:9px;color:var(--t4);width:16px;text-align:right;}
+.wli-tk{font-family:var(--disp);font-size:18px;color:#fff;}
+.wli-info{font-size:7px;color:var(--t3);margin-top:1px;}
+.wli-r{text-align:right;}
+.wli-pr{font-size:13px;font-weight:600;}
+.wli-ch{font-size:10px;margin-top:1px;}
+.wli-ch.up{color:var(--g);}
+.wli-ch.dn{color:var(--rd);}
+.wli-cv{font-size:7px;font-weight:700;letter-spacing:1px;padding:1px 5px;border-radius:2px;display:inline-block;margin-top:2px;}
+.wli-cv.h{background:var(--gdim);color:var(--g);border:1px solid var(--gbdr);}
+.wli-cv.m{background:var(--adim);color:var(--am);border:1px solid var(--abdr);}
+.wli-cv.w{background:var(--bg3);color:var(--t3);border:1px solid var(--b3);}
+.wli-cv.auto{background:rgba(129,140,248,0.08);color:var(--pu);border:1px solid rgba(129,140,248,0.2);}
+.vmr{display:flex;align-items:center;gap:8px;padding:7px 0;border-bottom:1px solid var(--b1);}
+.vmr:last-child{border-bottom:none;}
+.vmr-tk{font-family:var(--disp);font-size:15px;color:#fff;width:48px;flex-shrink:0;}
+.vmr-bw{flex:1;}
+.vmr-bg{height:4px;background:var(--b2);border-radius:2px;}
+.vmr-bf{height:4px;border-radius:2px;}
+.vmr-bf.g{background:var(--g);}
+.vmr-bf.a{background:var(--am);}
+.vmr-bf.r{background:var(--b3);}
+.vmr-st{font-size:9px;color:var(--t2);text-align:right;width:48px;white-space:nowrap;}
+.vmr-ch{font-size:8px;}
+.vmr-ch.up{color:var(--g);}
+.vmr-ch.dn{color:var(--rd);}
+.sig-card{background:var(--bg2);border:1px solid var(--b2);border-radius:8px;padding:13px 14px;margin-bottom:9px;cursor:pointer;transition:border-color .15s;border-left-width:3px;}
+.sig-card:active{background:var(--bg3);}
+.sig-card.HIGH{border-left-color:var(--rd);}
+.sig-card.MEDIUM{border-left-color:var(--am);}
+.sig-card.LOW{border-left-color:var(--b3);}
+.sig-top{display:flex;align-items:flex-start;justify-content:space-between;gap:10px;margin-bottom:6px;}
+.sig-hl{font-size:11px;color:var(--t1);line-height:1.5;flex:1;font-family:var(--sans);}
+.sig-badge{font-size:7px;font-weight:700;letter-spacing:1px;padding:2px 7px;border-radius:3px;flex-shrink:0;text-transform:uppercase;}
+.sig-badge.HIGH{background:var(--rdim);color:var(--rd);border:1px solid var(--rbdr);}
+.sig-badge.MEDIUM{background:var(--adim);color:var(--am);border:1px solid var(--abdr);}
+.sig-2nd{font-size:10px;color:var(--g);line-height:1.5;font-style:italic;padding:4px 8px;background:var(--gdim);border-left:2px solid var(--gbdr);border-radius:0 3px 3px 0;margin-bottom:6px;}
+.sig-meta{display:flex;gap:8px;font-size:8px;color:var(--t3);flex-wrap:wrap;align-items:center;}
+.sig-ticker{background:var(--bg3);border:1px solid var(--b3);border-radius:3px;padding:1px 6px;font-size:9px;font-weight:700;color:var(--g);font-family:var(--disp);}
+.sig-time{color:var(--t4);font-size:7px;}
+.sig-analyse{font-size:8px;color:var(--g);letter-spacing:1px;margin-left:auto;text-transform:uppercase;}
+.chat-wrap{display:flex;flex-direction:column;height:calc(100vh - 185px);min-height:360px;}
+.chat-msgs{flex:1;overflow-y:auto;padding:4px 0 10px;scrollbar-width:thin;scrollbar-color:var(--b2) transparent;}
+.msg{margin-bottom:10px;animation:fi .2s ease;}
+.msg-u{display:flex;justify-content:flex-end;}
+.msg-c{display:flex;justify-content:flex-start;}
+.bbl{max-width:90%;border-radius:10px;padding:9px 12px;font-size:11px;line-height:1.7;font-family:var(--sans);}
+.msg-u .bbl{background:var(--bg3);border:1px solid var(--b3);color:var(--t1);border-bottom-right-radius:3px;}
+.msg-c .bbl{background:var(--bg2);border:1px solid var(--b2);color:var(--t1);border-bottom-left-radius:3px;}
+.msg-c .bbl strong{color:#fff;}
+.msg-c .bbl h3{font-size:7px;letter-spacing:2px;text-transform:uppercase;color:var(--g);margin:10px 0 4px;padding-bottom:3px;border-bottom:1px solid var(--b1);}
+.msg-c .bbl h3:first-child{margin-top:0;}
+.msg-c .bbl ul{padding-left:13px;margin:3px 0;}
+.msg-c .bbl li{margin-bottom:2px;color:var(--t2);}
+.msg-meta{font-size:7px;color:var(--t4);margin-top:3px;}
+.msg-u .msg-meta{text-align:right;}
+.typing{display:flex;align-items:center;gap:4px;padding:9px 12px;background:var(--bg2);border:1px solid var(--b2);border-radius:10px;border-bottom-left-radius:3px;width:fit-content;}
+.td{width:5px;height:5px;border-radius:50%;background:var(--t3);animation:tda 1.2s ease-in-out infinite;}
+.td:nth-child(2){animation-delay:.2s;}
+.td:nth-child(3){animation-delay:.4s;}
+@keyframes tda{0%,60%,100%{transform:translateY(0)}30%{transform:translateY(-4px)}}
+.ci-wrap{padding-top:10px;border-top:1px solid var(--b1);}
+.ci-row{display:flex;gap:7px;align-items:flex-end;}
+.ci{background:var(--bg2);border:1px solid var(--b2);border-radius:8px;padding:9px 12px;font-family:var(--sans);font-size:12px;color:var(--t1);outline:none;resize:none;min-height:42px;max-height:110px;flex:1;line-height:1.5;transition:border-color .15s;}
+.ci:focus{border-color:var(--g);}
+.ci::placeholder{color:var(--t4);}
+.cs{background:var(--g);border:none;border-radius:8px;padding:9px 13px;color:var(--bg);cursor:pointer;font-size:14px;transition:background .12s;flex-shrink:0;height:42px;}
+.cs:hover{background:var(--g2);}
+.cs:disabled{opacity:.35;cursor:not-allowed;}
+.pb{background:var(--bg);border:1px solid var(--b2);border-radius:6px;padding:10px 12px;font-family:var(--sans);font-size:11px;color:var(--t1);outline:none;width:100%;resize:vertical;min-height:110px;line-height:1.65;transition:border-color .15s;}
+.pb:focus{border-color:var(--g);}
+.pb::placeholder{color:var(--t4);}
+.qa-i{background:var(--bg2);border:1px solid var(--b2);border-radius:6px;padding:10px 12px;margin-bottom:8px;}
+.qa-q{font-size:10px;color:var(--am);margin-bottom:5px;font-family:var(--sans);line-height:1.5;}
+.qa-a{background:var(--bg);border:1px solid var(--b3);border-radius:4px;padding:7px 10px;font-family:var(--sans);font-size:11px;color:var(--t1);outline:none;width:100%;transition:border-color .15s;}
+.qa-a:focus{border-color:var(--g);}
+.ao{background:var(--bg1);border:1px solid var(--b1);border-radius:8px;overflow:hidden;margin-top:10px;}
+.ao-h{padding:11px 13px;border-bottom:1px solid var(--b1);background:var(--bg2);display:flex;align-items:center;justify-content:space-between;}
+.ao-tk{font-family:var(--disp);font-size:20px;letter-spacing:1.5px;color:#fff;}
+.vb{display:inline-flex;align-items:center;gap:5px;padding:5px 11px;border-radius:4px;font-size:8px;font-weight:700;letter-spacing:2px;text-transform:uppercase;}
+.vb-b{background:var(--gdim);border:1px solid var(--gbdr);color:var(--g);}
+.vb-w{background:var(--adim);border:1px solid var(--abdr);color:var(--am);}
+.vb-p{background:var(--rdim);border:1px solid var(--rbdr);color:var(--rd);}
+.ao-body{padding:14px;max-height:52vh;overflow-y:auto;font-size:11px;line-height:1.8;font-family:var(--sans);}
+.ao-body h2{font-size:7px;letter-spacing:2.5px;text-transform:uppercase;color:var(--g);font-weight:600;margin:13px 0 5px;padding-bottom:3px;border-bottom:1px solid var(--b1);}
+.ao-body h2:first-child{margin-top:0;}
+.ao-body p{color:var(--t1);margin-bottom:5px;}
+.ao-body ul{padding-left:13px;margin-bottom:7px;}
+.ao-body li{color:var(--t2);margin-bottom:2px;}
+.ao-body strong{color:#fff;font-weight:600;}
+.ao-f{padding:8px 12px;border-top:1px solid var(--b1);display:flex;gap:6px;background:var(--bg2);}
+.modal-ov{position:fixed;inset:0;background:rgba(3,6,10,.93);z-index:500;display:flex;align-items:flex-end;backdrop-filter:blur(4px);}
+.modal-ov.hidden{display:none;}
+.modal{background:var(--bg2);border:1px solid var(--b3);border-radius:14px 14px 0 0;padding:18px 16px 34px;width:100%;max-height:85vh;overflow-y:auto;}
+.mh{width:28px;height:3px;background:var(--b3);border-radius:2px;margin:0 auto 16px;}
+.mt{font-family:var(--disp);font-size:22px;letter-spacing:2px;color:#fff;margin-bottom:3px;}
+.ms{font-size:7px;color:var(--t3);letter-spacing:1.5px;text-transform:uppercase;margin-bottom:16px;}
+.mg{margin-bottom:14px;}
+.mkl{font-size:7px;letter-spacing:2.5px;text-transform:uppercase;color:var(--t2);margin-bottom:4px;display:flex;align-items:center;justify-content:space-between;}
+.mkl a{color:var(--g);text-decoration:none;font-size:7px;}
+.mhint{font-size:8px;color:var(--t3);margin-top:3px;line-height:1.5;}
+.loading{display:flex;align-items:center;gap:8px;padding:12px 0;color:var(--t3);font-size:10px;}
+.spin{width:14px;height:14px;border:2px solid var(--b3);border-top-color:var(--g);border-radius:50%;animation:spin .75s linear infinite;flex-shrink:0;}
+@keyframes spin{to{transform:rotate(360deg)}}
+.empty{text-align:center;padding:28px 14px;color:var(--t4);font-size:8px;letter-spacing:2px;text-transform:uppercase;}
+.ei{font-size:22px;margin-bottom:7px;opacity:.3;}
+.err{background:var(--rdim);border:1px solid var(--rbdr);border-radius:5px;padding:9px 12px;font-size:10px;color:var(--rd);margin-top:7px;line-height:1.6;}
+.chip-row{display:flex;flex-wrap:wrap;gap:5px;min-height:22px;}
+.chip{display:flex;align-items:center;gap:4px;background:var(--bg3);border:1px solid var(--b3);border-radius:3px;padding:3px 8px;font-size:10px;font-weight:700;color:var(--t1);}
+.cx{color:var(--t4);cursor:pointer;font-size:13px;line-height:1;}
+.cx:hover{color:var(--rd);}
+.rb{display:flex;align-items:center;justify-content:space-between;background:var(--bg2);border:1px solid var(--b1);border-radius:5px;padding:7px 11px;margin-bottom:10px;font-size:8px;}
+.rb-l{display:flex;align-items:center;gap:7px;color:var(--t3);}
+.rb-r{color:var(--t4);font-size:7px;}
+.toast{position:fixed;bottom:calc(var(--nav)+12px);left:50%;transform:translateX(-50%) translateY(8px);z-index:900;background:var(--bg3);border:1px solid var(--gbdr);border-radius:20px;padding:7px 16px;font-size:9px;color:var(--g);letter-spacing:1px;opacity:0;transition:all .22s;pointer-events:none;white-space:nowrap;}
+.toast.show{opacity:1;transform:translateX(-50%) translateY(0);}
+.toast.warn{border-color:var(--abdr);color:var(--am);}
+.toast.err{border-color:var(--rbdr);color:var(--rd);}
+::-webkit-scrollbar{width:3px;}
+::-webkit-scrollbar-track{background:transparent;}
+::-webkit-scrollbar-thumb{background:var(--b3);border-radius:2px;}
+.stock-detail{position:fixed;inset:0;background:rgba(3,6,10,.95);z-index:400;display:flex;align-items:flex-end;backdrop-filter:blur(4px);}
+.stock-detail.hidden{display:none;}
+.sd-sheet{background:var(--bg2);border:1px solid var(--b3);border-radius:14px 14px 0 0;padding:20px 16px 36px;width:100%;max-width:520px;margin:0 auto;max-height:85vh;overflow-y:auto;}
+.sd-handle{width:28px;height:3px;background:var(--b3);border-radius:2px;margin:0 auto 16px;}
+.sd-header{display:flex;align-items:flex-start;justify-content:space-between;margin-bottom:16px;}
+.sd-ticker{font-family:var(--disp);font-size:32px;letter-spacing:2px;color:#fff;}
+.sd-price{text-align:right;}
+.sd-price-val{font-size:22px;font-weight:600;color:#fff;}
+.sd-price-chg{font-size:13px;margin-top:2px;}
+.sd-price-chg.up{color:var(--g);}
+.sd-price-chg.dn{color:var(--rd);}
+.sd-row{display:flex;gap:8px;margin-bottom:10px;}
+.sd-stat{flex:1;background:var(--bg3);border:1px solid var(--b3);border-radius:6px;padding:10px 12px;}
+.sd-stat-lbl{font-size:7px;letter-spacing:2px;text-transform:uppercase;color:var(--t3);margin-bottom:4px;}
+.sd-stat-val{font-size:14px;font-weight:600;color:var(--t1);}
+.alert-section{background:var(--bg3);border:1px solid var(--b3);border-radius:8px;padding:14px;margin-bottom:12px;}
+.alert-title{font-size:8px;letter-spacing:2px;text-transform:uppercase;color:var(--am);margin-bottom:12px;font-weight:600;}
+.alert-row{display:flex;align-items:center;gap:10px;margin-bottom:10px;}
+.alert-label{font-size:10px;color:var(--t2);width:100px;flex-shrink:0;}
+.alert-input{background:var(--bg);border:1px solid var(--b2);border-radius:4px;padding:7px 10px;font-family:var(--mono);font-size:12px;color:var(--t1);outline:none;flex:1;transition:border-color .15s;}
+.alert-input:focus{border-color:var(--am);}
+.alert-input::placeholder{color:var(--t4);}
+.alert-saved{font-size:8px;color:var(--g);letter-spacing:1px;text-align:center;margin-top:6px;display:none;}
+</style>
+</head>
+<body>
+<div class="atm"></div>
+<div class="app">
+
+<div class="topbar">
+  <div><div class="logo">SIS</div><div class="logo-sub">Signal Intelligence Terminal</div></div>
+  <div class="top-r">
+    <div class="clk" id="clk">--:--</div>
+    <button class="ib" onclick="openModal()">⚙ Keys</button>
+  </div>
+</div>
+<div class="pills">
+  <div class="pill"><div class="dot" id="dCl"></div><span id="lCl">Claude</span></div>
+  <div class="pill"><div class="dot" id="dSb"></div><span id="lSb">Supabase</span></div>
+  <div class="pill"><div class="dot" id="dFi"></div><span id="lFi">Finnhub</span></div>
+  <div class="pill"><div class="dot" id="dTg"></div><span id="lTg">Telegram</span></div>
+  <div class="pill"><div class="dot" id="dAR" style="background:var(--am)"></div><span id="lAR">Auto: OFF</span></div>
+</div>
+
+<!-- TERMINAL -->
+<div class="panel active" id="panel-terminal">
+<div style="padding-top:12px;">
+  <div class="ph">
+    <div><div class="pt">LIVE <span>TERMINAL</span></div><div class="ps">Watchlist · Volume movers · Real-time sync</div></div>
+    <div style="display:flex;gap:6px;">
+      <button class="btn btn-gh btn-sm" onclick="toggleAuto()" id="btnAuto">AUTO</button>
+      <button class="btn btn-g btn-sm" onclick="refreshTerminal()" id="btnRef">&#8635; NOW</button>
+    </div>
+  </div>
+  <div class="rb">
+    <div class="rb-l"><div id="tDot" style="width:5px;height:5px;border-radius:50%;background:var(--t4);flex-shrink:0;"></div><span id="tStat">Not refreshed yet</span></div>
+    <div class="rb-r" id="tTime">&#8212;</div>
+  </div>
+  <div class="card">
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px;">
+      <div class="ct" style="margin-bottom:0;">Watchlist &#8212; High Conviction First</div>
+      <span style="font-size:7px;color:var(--t3);">Tap &#8594; Detail &amp; Alerts</span>
+    </div>
+    <div id="wlLive"><div class="empty"><div class="ei">&#128203;</div>Tap &#8635; NOW to load</div></div>
+  </div>
+  <div class="card">
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px;">
+      <div class="ct" style="margin-bottom:0;">&#128293; Volume Movers Today</div>
+      <span style="font-size:7px;color:var(--t3);">Highest spikes</span>
+    </div>
+    <div id="volM"><div class="empty"><div class="ei">&#128202;</div>Tap &#8635; NOW to load</div></div>
+  </div>
+</div>
+</div>
+
+<!-- NEWS SIGNALS -->
+<div class="panel" id="panel-news">
+<div style="padding-top:12px;">
+  <div class="ph">
+    <div><div class="pt">NEWS <span>SIGNALS</span></div><div class="ps">Economist &#183; Yahoo Finance &#183; AI filtered</div></div>
+    <button class="btn btn-g btn-sm" onclick="loadSignals()" id="btnSig">&#8635; LOAD</button>
+  </div>
+  <div style="display:flex;gap:6px;margin-bottom:12px;">
+    <button class="btn btn-gh btn-sm" id="fAll" onclick="filterSigs('ALL')" style="flex:1;">ALL</button>
+    <button class="btn btn-gh btn-sm" id="fHigh" onclick="filterSigs('HIGH')" style="flex:1;">HIGH</button>
+    <button class="btn btn-gh btn-sm" id="fMed" onclick="filterSigs('MEDIUM')" style="flex:1;">MEDIUM</button>
+  </div>
+  <div class="loading" id="sigLoad" style="display:none;"><div class="spin"></div><span>Loading signals...</span></div>
+  <div id="sigArea"><div class="empty"><div class="ei">&#128225;</div>Tap LOAD to fetch latest signals</div></div>
+</div>
+</div>
+
+<!-- PASTE -->
+<div class="panel" id="panel-paste">
+<div style="padding-top:12px;">
+  <div class="ph"><div><div class="pt">PASTE <span>&amp; ANALYSE</span></div><div class="ps">Any signal &#183; Claude asks &#183; You answer &#183; Verdict</div></div></div>
+  <div class="card">
+    <div class="ct">01 &#8212; Paste Signal or News</div>
+    <textarea class="pb" id="pasteIn" placeholder="Paste anything:&#10;&#8226; A Telegram SIS alert&#10;&#8226; An Economist or FT headline&#10;&#8226; An earnings call quote&#10;&#8226; A government announcement&#10;&#8226; Your own market observation&#10;&#10;Claude will ask targeted questions to build conviction, then give a full trade verdict."></textarea>
+    <div style="display:flex;gap:7px;margin-top:8px;">
+      <button class="btn btn-g" style="flex:1;" id="btnPG" onclick="startPaste()">&#9889; ANALYSE THIS</button>
+      <button class="btn btn-gh btn-sm" onclick="clearPaste()">CLEAR</button>
+    </div>
+  </div>
+  <div id="pQs" style="display:none;">
+    <div class="card">
+      <div class="ct">02 &#8212; Research Session</div>
+      <div style="font-size:10px;color:var(--t3);margin-bottom:10px;line-height:1.6;font-family:var(--sans);">Paste Gemini data · Add your own context · Claude asks follow-up questions if needed · Get verdict when ready</div>
+      <!-- Research chat thread -->
+      <div id="researchThread" style="margin-bottom:10px;"></div>
+      <!-- Input row -->
+      <div style="background:var(--bg);border:1px solid var(--b2);border-radius:6px;padding:10px 12px;margin-bottom:8px;">
+        <div style="font-size:7px;letter-spacing:2px;text-transform:uppercase;color:var(--g);margin-bottom:6px;">Your reply / Gemini data / context</div>
+        <textarea class="qa-a" id="researchInput" placeholder="Paste Gemini's response here, or type your own context, questions, or observations..." rows="4" style="display:block;resize:vertical;min-height:80px;width:100%;margin-bottom:8px;"></textarea>
+        <div style="display:flex;gap:7px;">
+          <button class="btn btn-g" style="flex:1;" id="btnSendResearch" onclick="sendResearch()">&#8593; SEND</button>
+          <button class="btn btn-gh btn-sm" onclick="getVerdict()" id="btnPV">&#9889; GET VERDICT</button>
+        </div>
+      </div>
+      <div style="font-size:8px;color:var(--t3);text-align:center;">Claude will ask for more Gemini data if needed · Tap GET VERDICT when you're ready</div>
+    </div>
+  </div>
+  <div class="loading" id="pLoad" style="display:none;"><div class="spin"></div><span id="pLoadT">Reading signal...</span></div>
+  <div id="pVerd"></div>
+</div>
+</div>
+
+<!-- CHAT -->
+<div class="panel" id="panel-chat">
+<div style="padding-top:12px;">
+  <div class="ph">
+    <div><div class="pt">TRADING <span>ANALYST</span></div><div class="ps">Full strategy context &#183; Ask anything</div></div>
+    <button class="btn btn-gh btn-sm" onclick="clearChat()">CLEAR</button>
+  </div>
+  <div class="chat-wrap">
+    <div class="chat-msgs" id="chatMsgs">
+      <div class="msg msg-c"><div>
+        <div class="bbl"><strong>SIS Trading Analyst online.</strong><br><br>
+        Full context loaded &#8212; 9 themes, second-order framework, your positions (PLTR, RKLB, NVDA, EQT, RBRK), Account A &amp; B rules, Hormuz crisis, OpenClaw AI, petrodollar stress.<br><br>
+        Ask me anything. Paste a headline. I'll give you a straight answer.</div>
+        <div class="msg-meta">SIS Analyst &#183; Ready</div>
+      </div></div>
+    </div>
+    <div class="ci-wrap">
+      <div style="display:flex;gap:5px;margin-bottom:7px;flex-wrap:wrap;">
+        <button class="btn btn-gh btn-sm" onclick="qk('What are the best second-order Hormuz plays I do not own yet?')">Hormuz plays?</button>
+        <button class="btn btn-gh btn-sm" onclick="qk('Review my positions, what should I add, hold or cut?')">Review positions</button>
+        <button class="btn btn-gh btn-sm" onclick="qk('What AI picks-and-shovels plays am I missing?')">AI picks?</button>
+      </div>
+      <div class="ci-row">
+        <textarea class="ci" id="ciIn" placeholder="Ask anything..." rows="1"
+          onkeydown="if(event.key==='Enter'&&!event.shiftKey){event.preventDefault();sendChat()}"
+          oninput="ar(this)"></textarea>
+        <button class="cs" id="cSend" onclick="sendChat()">&#8593;</button>
+      </div>
+      <div style="font-size:7px;color:var(--t4);margin-top:3px;">Enter to send &#183; Shift+Enter for new line</div>
+    </div>
+  </div>
+</div>
+</div>
+
+<!-- ANALYSER -->
+<div class="panel" id="panel-analyser">
+<div style="padding-top:12px;">
+  <div class="ph"><div><div class="pt">TICKER <span>ANALYSER</span></div><div class="ps">Full strategy deep-dive</div></div></div>
+  <div class="card">
+    <div class="ct">Ticker &amp; Setup</div>
+    <div style="display:flex;gap:7px;margin-bottom:8px;">
+      <input type="text" class="field" id="aTk" style="width:110px;font-size:14px;font-weight:700;text-transform:uppercase;" placeholder="EQT" maxlength="8" oninput="this.value=this.value.toUpperCase()">
+      <select class="field fsel" id="aTm" style="flex:1;">
+        <option value="days">Days</option>
+        <option value="weeks" selected>Weeks</option>
+        <option value="months">Months</option>
+        <option value="multi-year">Multi-year</option>
+      </select>
+    </div>
+    <label class="fl">Why are you looking?</label>
+    <textarea class="field" style="min-height:65px;resize:vertical;font-size:11px;line-height:1.6;margin-bottom:8px;" id="aCx" placeholder="e.g. Hormuz crisis, US LNG exporter, Q4 revenue +47%..."></textarea>
+    <label class="fl">Account</label>
+    <select class="field fsel" id="aAc" style="margin-bottom:9px;">
+      <option value="A">Account A &#8212; Your capital (~£8,000)</option>
+      <option value="B">Account B &#8212; Brother's capital (~£5,000)</option>
+    </select>
+    <button class="btn btn-g btn-full" id="btnA" onclick="runAnalysis()">&#9889; RUN FULL ANALYSIS</button>
+  </div>
+  <div class="loading" id="aLoad" style="display:none;"><div class="spin"></div><span id="aLT">Initialising...</span></div>
+  <div id="aOut"></div>
+</div>
+</div>
+
+<!-- SETTINGS -->
+<div class="panel" id="panel-settings">
+<div style="padding-top:12px;">
+  <div class="ph"><div><div class="pt">WATCH<span>LIST</span></div><div class="ps">Manage tickers &#183; Supabase sync &#183; Auto-prune</div></div></div>
+  <div class="card">
+    <div class="ct">Manual Watchlist</div>
+    <div style="display:flex;gap:7px;margin-bottom:8px;">
+      <input type="text" class="field" id="wlIn" style="text-transform:uppercase;font-size:13px;font-weight:700;flex:1;" placeholder="NVDA" maxlength="8" oninput="this.value=this.value.toUpperCase()" onkeydown="if(event.key==='Enter')addT()">
+      <button class="btn btn-g btn-sm" onclick="addT()">+ ADD</button>
+    </div>
+    <div class="chip-row" id="wlC" style="margin-bottom:8px;"></div>
+    <div style="display:flex;gap:6px;">
+      <button class="btn btn-gh btn-sm" style="flex:1;" onclick="loadDef()">LOAD DEFAULTS</button>
+      <button class="btn btn-gh btn-sm" onclick="clearWl()">CLEAR ALL</button>
+    </div>
+  </div>
+  <div class="card">
+    <div class="ct">Auto-Watchlist from Signals</div>
+    <div style="font-size:10px;color:var(--t3);margin-bottom:6px;line-height:1.6;font-family:var(--sans);">
+      Tickers auto-added by the scanner from HIGH conviction news. Capped at 50. Expires after 14 days with no new signals. Core holdings never removed.
+    </div>
+    <div id="autoWlArea"><div style="font-size:9px;color:var(--t4);">Loading from database...</div></div>
+    <div style="display:flex;gap:6px;margin-top:8px;">
+      <button class="btn btn-gh btn-sm" style="flex:1;" onclick="loadAutoWl()">&#8635; SYNC</button>
+      <button class="btn btn-gh btn-sm" onclick="pruneAutoWl()">PRUNE OLD</button>
+    </div>
+  </div>
+  <div class="card">
+    <div class="ct">Telegram Test</div>
+    <button class="btn btn-gh btn-sm btn-full" onclick="testTg()">&#128241; SEND TEST MESSAGE</button>
+  </div>
+</div>
+</div>
+
+<!-- TRADE LOGGER -->
+<div class="panel" id="panel-portfolio">
+<div style="padding-top:12px;">
+  <div class="ph">
+    <div><div class="pt">TRADE <span>LOG</span></div><div class="ps">Log trades &#183; Live tracking &#183; Stop &amp; target alerts</div></div>
+    <div style="display:flex;gap:6px;">
+      <button class="btn btn-gh btn-sm" onclick="refreshPortfolio()" id="btnPF">&#8635;</button>
+      <button class="btn btn-g btn-sm" onclick="openAddTrade('A')">+ LOG TRADE</button>
+    </div>
+  </div>
+  <div class="card">
+    <div class="ct">Open Trades</div>
+    <div id="pfA_pos"><div class="empty"><div class="ei">&#128202;</div>No trades logged yet &#8212; tap + LOG TRADE</div></div>
+  </div>
+  <div class="card">
+    <div class="ct">Closed Trades &#8212; Realised P&amp;L</div>
+    <div id="pfClosed"><div class="empty"><div class="ei">&#128203;</div>No closed trades yet</div></div>
+  </div>
+</div>
+</div>
+
+</div>
+
+<div class="bnav">
+  <button class="nb active" onclick="nav('terminal')" id="nav-terminal"><div class="nbi"></div><div class="ni">&#128225;</div><div class="nl">Terminal</div></button>
+  <button class="nb" onclick="nav('news')" id="nav-news"><div class="nbi"></div><div class="ni">&#128308;</div><div class="nl">Signals</div></button>
+  <button class="nb" onclick="nav('paste')" id="nav-paste"><div class="nbi"></div><div class="ni">&#128203;</div><div class="nl">Paste</div></button>
+  <button class="nb" onclick="nav('chat')" id="nav-chat"><div class="nbi"></div><div class="ni">&#128172;</div><div class="nl">Chat</div></button>
+  <button class="nb" onclick="nav('portfolio')" id="nav-portfolio"><div class="nbi"></div><div class="ni">&#128200;</div><div class="nl">Portfolio</div></button>
+  <button class="nb" onclick="nav('analyser')" id="nav-analyser"><div class="nbi"></div><div class="ni">&#9889;</div><div class="nl">Analyse</div></button>
+</div>
+
+<div class="modal-ov hidden" id="mOv" onclick="cmOut(event)">
+  <div class="modal" onclick="event.stopPropagation()">
+    <div class="mh"></div>
+    <div class="mt">API KEYS</div>
+    <div class="ms">Stored locally &#183; Never transmitted</div>
+    <div class="mg"><div class="mkl">Anthropic (Claude AI) <a href="https://console.anthropic.com" target="_blank">&#8599; Get key</a></div>
+      <input type="password" class="field" id="kAnt" placeholder="sk-ant-api03-...">
+      <div class="mhint">Powers all AI analysis.</div></div>
+    <div class="mg"><div class="mkl">Supabase URL <a href="https://supabase.com" target="_blank">&#8599; Dashboard</a></div>
+      <input type="text" class="field" id="kSbU" placeholder="https://xxxx.supabase.co"></div>
+    <div class="mg"><div class="mkl">Supabase Anon Key</div>
+      <input type="password" class="field" id="kSbK" placeholder="eyJ..."></div>
+    <div class="mg"><div class="mkl">Finnhub <a href="https://finnhub.io" target="_blank">&#8599; Get key</a></div>
+      <input type="password" class="field" id="kFi" placeholder="Your Finnhub token"></div>
+    <div class="mg"><div class="mkl">Telegram Bot Token <a href="https://t.me/BotFather" target="_blank">&#8599; BotFather</a></div>
+      <input type="password" class="field" id="kTgT" placeholder="7743291847:AAFxxxxxxx"></div>
+    <div class="mg"><div class="mkl">Telegram Chat ID</div>
+      <input type="text" class="field" id="kTgC" placeholder="8148874257"></div>
+    <button class="btn btn-g btn-full" onclick="saveK()" style="margin-top:8px;">SAVE ALL KEYS</button>
+    <button class="btn btn-gh btn-full" onclick="cm()" style="margin-top:7px;">CANCEL</button>
+  </div>
+</div>
+
+<!-- Import Holdings Modal -->
+<div class="modal-ov hidden" id="importOv" onclick="if(event.target===this)closeImport()">
+  <div class="modal" onclick="event.stopPropagation()">
+    <div class="mh"></div>
+    <div class="mt">IMPORT HOLDING</div>
+    <div class="ms">Add existing position &#183; Enter your current details</div>
+
+    <div class="mg">
+      <div class="mkl">Ticker</div>
+      <input type="text" class="field" id="imp_tick" placeholder="PLTR" maxlength="8"
+        oninput="this.value=this.value.toUpperCase()"
+        style="text-transform:uppercase;font-size:18px;font-weight:700;letter-spacing:2px;">
+    </div>
+
+    <div class="mg">
+      <div class="mkl">Account</div>
+      <select class="field fsel" id="imp_acc">
+        <option value="A">Account A &#8212; Your capital</option>
+        <option value="B">Account B &#8212; Brother's capital</option>
+      </select>
+    </div>
+
+    <div class="mg">
+      <div class="mkl">Current Value in &#163; GBP <span style="color:var(--t4);font-size:7px;">what your broker shows right now in pounds</span></div>
+      <input type="number" class="field" id="imp_val" placeholder="e.g. 7278" step="1" style="font-size:16px;font-weight:600;">
+      <div class="mhint">Open your broker app, find this position, enter the current value in &#163;</div>
+    </div>
+
+    <div class="mg">
+      <div class="mkl">Are you in profit or loss?</div>
+      <div style="display:flex;gap:8px;margin-bottom:6px;">
+        <button type="button" id="pnlBtnProfit" onclick="setPnlType('profit')"
+          style="flex:1;padding:10px;border-radius:5px;border:1px solid var(--gbdr);background:var(--gdim);color:var(--g);font-family:var(--mono);font-size:10px;font-weight:700;cursor:pointer;letter-spacing:1px;">
+          &#9650; PROFIT
+        </button>
+        <button type="button" id="pnlBtnLoss" onclick="setPnlType('loss')"
+          style="flex:1;padding:10px;border-radius:5px;border:1px solid var(--b3);background:transparent;color:var(--t3);font-family:var(--mono);font-size:10px;font-weight:700;cursor:pointer;letter-spacing:1px;">
+          &#9660; LOSS
+        </button>
+      </div>
+      <div style="display:flex;gap:8px;align-items:center;">
+        <input type="number" class="field" id="imp_pnl" placeholder="e.g. 1933" step="1" min="0" style="flex:1;">
+        <select class="field fsel" id="imp_pnl_currency" onchange="onPnlCurrencyChange()" style="width:90px;flex-shrink:0;">
+          <option value="GBP">&#163; GBP</option>
+          <option value="USD">$ USD</option>
+        </select>
+      </div>
+      <div class="mhint" id="imp_pnl_hint">How much are you up or down on this position? Select &#163; or $ to match what your broker shows</div>
+    </div>
+    
+    <div class="mg" id="imp_fx_row" style="display:none;">
+      <div class="mkl">GBP/USD Rate <span style="color:var(--t4);font-size:7px;">only needed if entering in USD</span></div>
+      <input type="number" class="field" id="imp_fx" placeholder="e.g. 0.79" step="0.001" value="0.79">
+      <div class="mhint">Current rate — check Google for live rate</div>
+    </div>
+
+    <div class="mg">
+      <div class="mkl" style="color:var(--rd);">Stop Loss ($)</div>
+      <input type="number" class="field" id="imp_stop" placeholder="e.g. 130.00" step="0.01" style="border-color:var(--rbdr);">
+    </div>
+
+    <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;" class="mg">
+      <div>
+        <div class="mkl" style="color:var(--g);font-size:6px;">Target 1 ($)</div>
+        <input type="number" class="field" id="imp_t1" placeholder="T1" step="0.01">
+      </div>
+      <div>
+        <div class="mkl" style="color:var(--g);font-size:6px;">Target 2 ($)</div>
+        <input type="number" class="field" id="imp_t2" placeholder="T2" step="0.01">
+      </div>
+      <div>
+        <div class="mkl" style="color:var(--g);font-size:6px;">Target 3 ($)</div>
+        <input type="number" class="field" id="imp_t3" placeholder="T3" step="0.01">
+      </div>
+    </div>
+
+    <div class="mg">
+      <div class="mkl">Thesis</div>
+      <input type="text" class="field" id="imp_thesis" placeholder="e.g. AI defence, OpenClaw compute demand">
+    </div>
+
+    <div class="mg">
+      <div class="mkl">Date Purchased</div>
+      <input type="date" class="field" id="imp_date">
+    </div>
+
+    <button class="btn btn-g btn-full" onclick="saveImport()" style="margin-top:4px;">&#128200; ADD TO PORTFOLIO</button>
+    <button class="btn btn-gh btn-full" onclick="closeImport()" style="margin-top:7px;">CANCEL</button>
+  </div>
+</div>
+
+<!-- Add Trade Modal -->
+<div class="modal-ov hidden" id="addTradeOv" onclick="if(event.target===this)closeAddTrade()">
+  <div class="modal" onclick="event.stopPropagation()">
+    <div class="mh"></div>
+    <div class="mt" id="trModalTitle">LOG TRADE</div>
+    <div class="ms">Entry &#183; Exit strategy &#183; Stored locally</div>
+
+    <div class="mg">
+      <div class="mkl">Ticker</div>
+      <input type="text" class="field" id="tr_tick" placeholder="NVDA" maxlength="8" oninput="this.value=this.value.toUpperCase()" style="text-transform:uppercase;font-size:16px;font-weight:700;letter-spacing:2px;">
+    </div>
+
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;" class="mg">
+      <div>
+        <div class="mkl">Action</div>
+        <select class="field fsel" id="tr_action">
+          <option value="BUY">BUY</option>
+          <option value="SELL">SELL / CLOSE</option>
+        </select>
+      </div>
+      <div>
+        <div class="mkl">Account</div>
+        <select class="field fsel" id="tr_acc">
+          <option value="A">Account A</option>
+          <option value="B">Account B</option>
+        </select>
+      </div>
+    </div>
+
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;" class="mg">
+      <div>
+        <div class="mkl">Entry Price ($)</div>
+        <input type="number" class="field" id="tr_price" placeholder="175.00" step="0.01">
+      </div>
+      <div>
+        <div class="mkl">Position Size (&#163;)</div>
+        <input type="number" class="field" id="tr_size" placeholder="500" step="1">
+      </div>
+    </div>
+
+    <div class="mg">
+      <div class="mkl" style="color:var(--rd);">Stop Loss ($) <span style="color:var(--t4);font-size:7px;">SET BEFORE ENTRY</span></div>
+      <input type="number" class="field" id="tr_stop" placeholder="e.g. 150.00" step="0.01" style="border-color:var(--rbdr);">
+    </div>
+
+    <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;" class="mg">
+      <div>
+        <div class="mkl" style="color:var(--g);font-size:6px;">Target 1 ($)</div>
+        <input type="number" class="field" id="tr_t1" placeholder="200.00" step="0.01">
+      </div>
+      <div>
+        <div class="mkl" style="color:var(--g);font-size:6px;">Target 2 ($)</div>
+        <input type="number" class="field" id="tr_t2" placeholder="225.00" step="0.01">
+      </div>
+      <div>
+        <div class="mkl" style="color:var(--g);font-size:6px;">Target 3 ($)</div>
+        <input type="number" class="field" id="tr_t3" placeholder="260.00" step="0.01">
+      </div>
+    </div>
+
+    <div class="mg">
+      <div class="mkl">Thesis (one line)</div>
+      <input type="text" class="field" id="tr_thesis" placeholder="e.g. AI infrastructure, OpenClaw compute demand">
+    </div>
+
+    <div class="mg">
+      <div class="mkl">Thesis Exit Trigger</div>
+      <input type="text" class="field" id="tr_texit" placeholder="e.g. Hormuz reopens AND EQT misses earnings">
+    </div>
+
+    <div class="mg">
+      <div class="mkl">Date</div>
+      <input type="date" class="field" id="tr_date">
+    </div>
+
+    <button class="btn btn-g btn-full" onclick="saveTrade()" style="margin-top:4px;">&#128200; SAVE TRADE</button>
+    <button class="btn btn-gh btn-full" onclick="closeAddTrade()" style="margin-top:7px;">CANCEL</button>
+  </div>
+</div>
+
+<!-- Stock Detail Panel -->
+<div class="stock-detail hidden" id="stockDetail" onclick="closeStockDetail(event)">
+  <div class="sd-sheet" onclick="event.stopPropagation()">
+    <div class="sd-handle"></div>
+    <div class="sd-header">
+      <div>
+        <div class="sd-ticker" id="sdTicker">&#8212;</div>
+        <div style="font-size:9px;color:var(--t3);margin-top:2px;" id="sdTheme">&#8212;</div>
+      </div>
+      <div class="sd-price">
+        <div class="sd-price-val" id="sdPrice">&#8212;</div>
+        <div class="sd-price-chg" id="sdChg">&#8212;</div>
+      </div>
+    </div>
+    <div class="sd-row">
+      <div class="sd-stat"><div class="sd-stat-lbl">Volume</div><div class="sd-stat-val" id="sdVol">&#8212;</div></div>
+      <div class="sd-stat"><div class="sd-stat-lbl">Vol Ratio</div><div class="sd-stat-val" id="sdVR">&#8212;</div></div>
+      <div class="sd-stat"><div class="sd-stat-lbl">Avg Vol</div><div class="sd-stat-val" id="sdAvg">&#8212;</div></div>
+    </div>
+    <div class="alert-section">
+      <div class="alert-title">&#128276; Price Alerts &#8212; fires to Telegram</div>
+      <div class="alert-row">
+        <div class="alert-label">% Move alert</div>
+        <input class="alert-input" id="alertPct" type="number" placeholder="e.g. 3" min="0" max="50" step="0.5">
+        <span style="font-size:11px;color:var(--t3);">%</span>
+      </div>
+      <div class="alert-row">
+        <div class="alert-label">Target price (up)</div>
+        <input class="alert-input" id="alertTargetUp" type="number" placeholder="e.g. 74.00" step="0.01">
+        <span style="font-size:11px;color:var(--g);">&#8593;</span>
+      </div>
+      <div class="alert-row">
+        <div class="alert-label">Target price (down)</div>
+        <input class="alert-input" id="alertTargetDn" type="number" placeholder="e.g. 57.50" step="0.01">
+        <span style="font-size:11px;color:var(--rd);">&#8595;</span>
+      </div>
+      <button class="btn btn-g btn-full" onclick="saveAlert()" style="margin-top:4px;">SAVE ALERT</button>
+      <div class="alert-saved" id="alertSaved">&#10003; Alert saved &#8212; active on next scan</div>
+    </div>
+    <div style="display:flex;gap:8px;">
+      <button class="btn btn-g" style="flex:1;" onclick="loadAFromDetail()">&#9889; FULL ANALYSIS</button>
+      <button class="btn btn-gh" onclick="closeStockDetail()">CLOSE</button>
+    </div>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+const SUPABASE_URL='https://gvbsycbutbewhgcvsqim.supabase.co';
+const SUPABASE_KEY='sb_publishable_c7pz_V7SopD38adJ65N9Dw_jjJFAZ-Z';
+const CORE=['NVDA','PLTR','RKLB','EQT','RBRK','VRT','CCJ','OKLO','LMT','GLD','CRWD','RTX','CEG'];
+const MAX_AUTO_WL=50;
+const EXPIRE_DAYS=14;
+
+const K={
+  get ant(){return localStorage.getItem('sis_ant')||'';},
+  get sbU(){return localStorage.getItem('sis_sbU')||SUPABASE_URL;},
+  get sbK(){return localStorage.getItem('sis_sbK')||SUPABASE_KEY;},
+  get finn(){return localStorage.getItem('sis_finn')||'';},
+  get tgt(){return localStorage.getItem('sis_tgt')||'';},
+  get tgc(){return localStorage.getItem('sis_tgc')||'';},
+};
+
+let WL=JSON.parse(localStorage.getItem('sis_wl')||'[]');
+let autoOn=false,autoIv=null,chatHist=[],pQs=[],pOrig='';
+let allSignals=[],sigFilter='ALL';
+let currentDetailSnap=null;
+
+const DEF=[...CORE];
+const TM={
+  NVDA:'AI & Infrastructure',PLTR:'AI & Infrastructure',MSFT:'AI & Infrastructure',
+  AMZN:'AI & Infrastructure',GOOGL:'AI & Infrastructure',META:'AI & Infrastructure',
+  VRT:'AI Picks & Shovels',ARM:'AI Picks & Shovels',ANET:'AI Picks & Shovels',
+  SMCI:'AI Picks & Shovels',AVGO:'AI Picks & Shovels',AMD:'AI Picks & Shovels',
+  RKLB:'Space & Satellite',ASTS:'Space & Satellite',
+  CCJ:'Nuclear',OKLO:'Nuclear',CEG:'Nuclear',SMR:'Nuclear',NNE:'Nuclear',
+  EQT:'Oil/Gas',LNG:'Oil/Gas',CQP:'Oil/Gas',
+  RBRK:'Cyber/Defence',CRWD:'Cyber/Defence',LMT:'Cyber/Defence',RTX:'Cyber/Defence',AXON:'Cyber/Defence',
+  GLD:'Geopolitical',MP:'Geopolitical',
+  TSLA:'Robotics',ISRG:'Robotics',
+  MRNA:'Biotech',ILMN:'Biotech',
+};
+
+const SYS=`You are the personal AI trading analyst for SIS — Signal Intelligence System. You combine real-world intelligence with predictive analysis to identify opportunities before the majority of market participants have priced them in.
+
+═══ PORTFOLIO ═══
+Account A: ~£8,000 (own capital) | Account B: ~£5,000 (brother's capital, higher standard) | Total: ~£13,000
+Phase: Learning — testing strategy. Small losses are acceptable tuition fees.
+UK retail investor. Accessible via Freetrade, IG, Trading 212, HL.
+
+CURRENT POSITIONS:
+- PLTR: HOLD strong — AI defence, OpenClaw thesis strengthening
+- RKLB: HOLD strong — Space economy, $2B+ backlog, hypersonics
+- NVDA: HOLD strong — AI infrastructure, OpenClaw compute platform
+- RBRK: WEAK — consider closing, losing position in both accounts adds no diversification
+- EQT: Active trade — entry ~$64.50, stop $57.50, Hormuz/LNG thesis
+
+═══ POSITION SIZING (£ only — never calculate share counts) ═══
+- Speculative: £150–300 (Account A only, pre-profit or weak MF score)
+- Medium conviction: £300–500 (either account with care)
+- High conviction: £500–900 (either account, strong signal + quality)
+- Event reserve: £800–1,200 held as cash for ceasefire/catalyst reversal trades
+- Max single position: 12% of relevant account
+- Max with adds: 15% of relevant account
+- Minimum cash: 20% always — this is non-negotiable
+
+ACCOUNT B RULE: Brother's capital. Higher conviction only. No speculative positions. Every trade must be explainable and justifiable if it goes against you.
+
+═══ 13 INVESTMENT THEMES ═══
+1. AI & Infrastructure — models, data centres, chips, cooling, power, networking
+2. AI Picks & Shovels — companies supplying AI regardless of who wins the AI race
+3. Space & Satellite Economy — launch, LEO satellites, Earth observation, hypersonics
+4. Nuclear & Next-Gen Energy — SMRs, uranium supply chain, nuclear services, grid
+5. Biotech & Longevity — AI drug discovery, gene editing, GLP-1 ecosystem
+6. Humanoid Robotics & Physical AI — humanoid robots, embodied intelligence, physical AI
+7. Robotics & Automation — industrial automation, drones, autonomous systems
+8. Cyber & Defence Tech — cybersecurity, defence contracts, autonomous weapons
+9. Oil, Gas & Energy Geopolitics — LNG, energy security, multipolar world energy
+10. Geopolitical Momentum & Critical Minerals — wartime picks & shovels, reshoring, rare earths
+11. Water & Food Security — water infrastructure, fertilizers, agricultural supply chains
+12. Financial Infrastructure & De-dollarisation — gold, SWIFT alternatives, commodity-backed currencies
+13. Longevity & Demographic Shift — ageing population, elder care, GLP-1, pension infrastructure
+
+═══ THE CORE EDGE — SECOND ORDER ALWAYS ═══
+Markets are slow to process complex, multi-layered information. The first-order trade (oil higher on Hormuz closure) gets crowded immediately. The second and third-order effects take days or weeks to be priced. That gap is where the edge lives.
+
+ALWAYS ask these three questions before identifying candidates:
+1. What does this event make MORE scarce or valuable?
+2. Who SUPPLIES, ENABLES, or SERVICES the obvious winner? (picks and shovels)
+3. What does the market NOT YET UNDERSTAND about this? (the mispricing)
+
+CRITICAL RULE — REJECT THE CROWDED TRADE:
+- If the first-order play is already up 3%+ on the news, it is likely too late
+- Large-cap defence primes (LMT, NOC, GD) are heavily covered and efficiently priced — they rarely offer asymmetric returns
+- The edge is in the second-tier suppliers, component makers, and enablers that the market hasn't connected to the thesis yet
+- Always ask: "Is this already consensus? Would a Bloomberg terminal trader already know this?"
+
+═══ THREE SIGNAL TYPES ═══
+TYPE 1 — Breaking News & Geopolitical Events:
+War, sanctions, government falls, treaty signed. Obvious reaction gets crowded fast. Go one level deeper: who supplies the winning side? Who has pricing power from the disruption? Timeframe: days to months.
+Example: Hormuz closes → obvious = oil higher → REAL TRADE = US LNG exporters, war risk insurers, pipeline bypass infrastructure.
+
+TYPE 2 — Supply Chain & Picks-and-Shovels Logic:
+A dominant company announces something big. The big company gets attention. The supplier doesn't — yet.
+Example: Nvidia announces $1T in chip orders → trade is NOT Nvidia (priced in) → trade IS power companies, cooling infrastructure, networking.
+Timeframe: weeks to months.
+
+TYPE 3 — AI-Driven Future Prediction:
+Model where the world is in 6, 12, 36 months. What is the market currently ignoring? Position before consensus arrives.
+Timeframe: variable, often multi-month to multi-year.
+
+═══ THE THREE QUESTIONS — MANDATORY FOR EVERY TRADE ═══
+1. WHY HIGHER? One specific fundamental or event-driven reason. No "because momentum" or "chart looks good."
+2. WHAT PROVES ME WRONG? A specific, nameable event or data point that invalidates the thesis. Not "if market goes down."
+3. EARLY, ON-TIME, OR LATE? Honest assessment of where you are in the information cycle. Late = reduce size or skip.
+If all three cannot be answered clearly → WATCHLIST, not portfolio.
+
+═══ MAGIC FORMULA — QUALITY FILTER (not a buy signal alone) ═══
+Return on Capital = EBIT / (Net Working Capital + Net Fixed Assets) — how efficiently business generates profit
+Earnings Yield = EBIT / Enterprise Value — how cheap the stock is relative to operating earnings
+Combined score: High RoC + High EY = good business at fair price = quality backs the thesis
+
+CRITICAL CAVEATS:
+- High Earnings Yield alone means CHEAP, not GOOD — a cheap bad business is still a bad business
+- Defence primes often have 5-10 year backlogs — more revenue ≠ immediate earnings surprise
+- Check: is incremental demand already in guidance? If yes, it is already priced in
+- Growth companies score poorly on EY because they are pre-profit — the thematic signal carries more weight there
+- Never spread across highly correlated names on the same catalyst — that is the same bet multiple times, not diversification
+- One well-sized position in the best name beats three smaller positions in similar names
+
+═══ TIMEFRAME FRAMEWORK ═══
+Days (1-7): Breaking news first-order reaction — exit when news cycle fades or 8-15% gain
+Weeks (1-6): Second-order news trade — exit when story becomes consensus on financial media
+Months (1-6): Macro shift with duration — exit when catalyst resolves or MF score deteriorates
+Multi-month (6-18): Structural supply chain play — exit when story fully priced
+Long-term (18m+): AI-predicted structural shift — hold through volatility, exit if prediction proved wrong
+
+KEY RULE: Never let a short-term trade become a long-term hold by accident. If you bought on news and the news fades, sell it.
+
+═══ NON-NEGOTIABLE RULES ═══
+- Signal comes first — every trade must originate from a clear, articulable signal
+- Second order always — the first-order trade is already crowded
+- Stop set at entry — not after it drops, not tomorrow. Immediately.
+- Thesis over price — 15% drop is noise; thesis breaking is the signal
+- Account B = higher standard — no speculative positions, explain every decision
+- 20% cash minimum — ceasefire trade reserve, error buffer, speed capital
+- One deep-dive per week maximum — overtrading destroys capital and clarity
+- Ceasefire trade is always coming — every geopolitical crisis resolves; keep cash ready for the reversal
+- Position sizing in £ only — never calculate or mention share counts
+
+═══ MACRO CONTEXT (March 2026) ═══
+- Hormuz crisis: US-Israel strikes on Iran, strait effectively closed, Qatar LNG offline, Marines deploying for mine-clearing operations, Europe scrambling for US LNG
+- Agentic AI (OpenClaw): Jensen Huang confirmed fastest-growing open source project in history, surpassing Linux in 3 weeks. 1,000x–1,000,000x more compute than standard chatbot. Palantir and Nvidia are the operating system and hardware layers.
+- Petrodollar stress: Iran demanding yuan settlement, CIPS processing $245T, Saudi Arabia ending exclusive dollar pricing. Gold is the primary 3-5 year beneficiary.
+- Ceasefire trade: Trump negotiating with Iran. When Hormuz reopens, oil drops violently — keep cash reserved for this reversal.
+
+═══ ANALYTICAL STYLE ═══
+- Direct, specific, no filler
+- Real £ amounts, real prices — never vague ranges
+- Lead with prediction, not description
+- Be honest when thesis is weak or timing is late — PASS is a valid and often correct verdict
+- When two layers conflict (strong theme, weak MF or vice versa), explain the tension clearly — that tension is important information
+- Never recommend spreading across correlated names as fake diversification
+- Always identify the specific thesis exit trigger before recommending entry
+- PASS means PASS — never recommend a trade in the same report where the verdict is PASS. "If forced to play" undermines the conviction of the PASS decision. Either pass with full conviction or buy with full conviction. Never both.
+
+═══ HIGH GROWTH PRIORITY — SMALL CAPITAL RULES ═══
+With £13,000 total capital, the objective is asymmetric returns — not capital preservation through diversification into large-caps. One 50% winner matters more than five 8% winners.
+
+ALWAYS PREFER:
+- Smaller, less-covered companies where the market hasn't connected the dots yet
+- Second and third-tier suppliers with direct exposure to the theme (not the prime contractors)
+- Companies where the catalyst is specific and near-term, not already in 5-year guidance
+- Early-cycle positions where institutional money has not yet arrived
+- High operating leverage — companies where revenue growth translates to disproportionate earnings growth
+
+AVOID FOR HIGH-GROWTH OBJECTIVE:
+- Large-cap primes where analysts already have 5-year DCF models built — there is no information edge
+- Diversified conglomerates where the theme is 15% of revenue — too diluted
+- Companies with 5-10 year backlogs that smooth revenue — no near-term earnings surprise possible
+- Anything "safe" that a pension fund would own — safety is not the goal with this capital size
+
+INCREMENTAL vs ALREADY-PRICED-IN TEST (mandatory for every defence/government trade):
+Before recommending any company that sells to governments:
+1. What % of their revenue is already contracted under existing multi-year programs?
+2. Is the new spending incremental to current guidance or already embedded?
+3. What is the timeline from contract award to revenue recognition?
+4. Which specific programs or products benefit — not the whole company
+If the answers show revenue is 2+ years away or already in guidance → the trade is in the second-tier supplier who wins the sub-contract, not the prime
+
+CORRELATION CHECK (mandatory when recommending multiple names):
+If two or more names would move on the same catalyst (e.g. same Congressional vote, same oil price move, same earnings release) → they are the same bet. Pick the SINGLE best-positioned name and size it appropriately. Never split a position across correlated names and call it diversification.
+
+DEFENCE SECTOR SPECIFIC RULES:
+- Munitions and components suppliers > prime contractors for asymmetric returns
+- Drone warfare suppliers (KTOS, AeroVironment) move faster than legacy primes on conflict escalation
+- Electronic warfare and countermeasures are the fastest-restocking category
+- Mine warfare, underwater systems, and cyber are structurally underfunded — these get emergency procurement
+- The picks-and-shovels of modern warfare: propellant, guidance chips, satellite comms, logistics software
+- Always ask: which company gets the sub-contract when the prime wins the big contract?
+
+═══ CONTRACT STRUCTURE CHECK (mandatory for shipping, defence, energy) ═══
+Before using commodity rate spikes as an earnings catalyst:
+1. What % of the company fleet/capacity is on SPOT vs LONG-TERM FIXED contracts?
+2. What is the average contract duration and when do they reprice?
+3. A company with 80% long-term fixed contracts does NOT benefit immediately from a spot rate spike
+4. The real trade is companies with HIGH spot exposure OR upcoming contract rollovers in next 6-12 months
+5. Never use "rates are up X%" as a catalyst without confirming the company actually captures that rate
+Ask Gemini for contract breakdown before building any thesis on rate movements.
+
+═══ REPLACE NARRATIVE SIGNALS WITH DATA SIGNALS ═══
+Narrative signals (Cramer mentioned it, everyone is talking about it) are directionally useful for timing but not rigorous alone.
+Always validate with data — ask Gemini for:
+- ETF inflows into this sector over last 30 days
+- Number of analyst upgrades vs downgrades in last 30 days
+- Options open interest changes on relevant tickers
+- 30-day price performance vs 52-week range position
+If Cramer mentioned it AND ETF inflows spiked AND analyst upgrades accelerating = confirmed late.
+If Cramer mentioned it but flows flat and no upgrades = narrative ahead of positioning, still opportunity.
+
+═══ CONVICTION BINARY ═══
+Every verdict must be one of: STRONG BUY / BUY / WATCHLIST / PASS / AVOID
+PASS means full PASS. Never add "if forced to play" to a PASS verdict. That undermines the decision.
+BUY means BUY with specific sizing and conviction — not hedged speculation.
+If genuinely split: WATCHLIST with a specific trigger that converts it to BUY.
+The trigger must be specific: "becomes BUY if price pulls back to $X" or "becomes BUY if Hormuz reopens and LNG drops 20%+".
+Never give a PASS and then recommend a position in the same report.
+
+═══ SHIPPING AND COMMODITY COMPANY RULES ═══
+- Day rate spikes only matter for companies with spot or near-term repricing exposure
+- Long-term charter companies = stable revenue but NOT leveraged to spot spikes
+- Spot-exposed companies = direct leverage to rate environment
+- Contract rollover timeline is the key variable — when do existing contracts expire?
+- Diversified companies where the theme is less than 30% of revenue = wrong pick, find a purer play
+- Always ask: what % of revenue is directly from this catalyst?`;
+
+const YP='https://api.allorigins.win/raw?url=';
+
+window.addEventListener('DOMContentLoaded',()=>{
+  updateSt();renderWL();
+  setInterval(()=>{document.getElementById('clk').textContent=new Date().toLocaleTimeString('en-GB',{hour:'2-digit',minute:'2-digit'});},1000);
+  document.getElementById('clk').textContent=new Date().toLocaleTimeString('en-GB',{hour:'2-digit',minute:'2-digit'});
+  loadAutoWl();
+  loadSignals();
+});
+
+function nav(id){
+  document.querySelectorAll('.panel').forEach(p=>p.classList.remove('active'));
+  document.querySelectorAll('.nb').forEach(b=>b.classList.remove('active'));
+  document.getElementById('panel-'+id).classList.add('active');
+  document.getElementById('nav-'+id).classList.add('active');
+  window.scrollTo(0,0);
+}
+
+function openModal(){
+  document.getElementById('kAnt').value=K.ant;document.getElementById('kSbU').value=K.sbU;
+  document.getElementById('kSbK').value=K.sbK;document.getElementById('kFi').value=K.finn;
+  document.getElementById('kTgT').value=K.tgt;document.getElementById('kTgC').value=K.tgc;
+  document.getElementById('mOv').classList.remove('hidden');
+}
+function cm(){document.getElementById('mOv').classList.add('hidden');}
+function cmOut(e){if(e.target===document.getElementById('mOv'))cm();}
+function saveK(){
+  localStorage.setItem('sis_ant',document.getElementById('kAnt').value.trim());
+  localStorage.setItem('sis_sbU',document.getElementById('kSbU').value.trim());
+  localStorage.setItem('sis_sbK',document.getElementById('kSbK').value.trim());
+  localStorage.setItem('sis_finn',document.getElementById('kFi').value.trim());
+  localStorage.setItem('sis_tgt',document.getElementById('kTgT').value.trim());
+  localStorage.setItem('sis_tgc',document.getElementById('kTgC').value.trim());
+  updateSt();cm();toast('Keys saved');
+}
+function updateSt(){
+  const s=(d,l,ok,lb)=>{const dot=document.getElementById(d);dot.className='dot'+(ok?' live':'');if(!ok)dot.style.background='var(--t4)';document.getElementById(l).textContent=ok?lb+' ok':lb;};
+  s('dCl','lCl',!!K.ant,'Claude');s('dSb','lSb',!!(K.sbU&&K.sbK),'Supabase');
+  s('dFi','lFi',!!K.finn,'Finnhub');s('dTg','lTg',!!K.tgt,'Telegram');
+}
+
+async function sbGet(table,params=''){
+  const r=await fetch(`${K.sbU}/rest/v1/${table}?${params}`,{headers:{'apikey':K.sbK,'Authorization':`Bearer ${K.sbK}`}});
+  return r.json();
+}
+async function sbDelete(table,params){
+  return fetch(`${K.sbU}/rest/v1/${table}?${params}`,{method:'DELETE',headers:{'apikey':K.sbK,'Authorization':`Bearer ${K.sbK}`}});
+}
+
+// ── Watchlist ──
+function loadDef(){WL=[...DEF];saveWL();renderWL();toast('Defaults loaded');}
+function addT(){
+  const v=document.getElementById('wlIn').value.trim().toUpperCase();
+  if(!v)return;if(WL.includes(v)){toast('Already in list','warn');return;}
+  WL.push(v);saveWL();renderWL();document.getElementById('wlIn').value='';toast('+ '+v);
+}
+function removeT(t){
+  if(CORE.includes(t)){toast(t+' is a core holding — remove from defaults to delete','warn');return;}
+  WL=WL.filter(x=>x!==t);saveWL();renderWL();
+}
+function clearWl(){if(!confirm('Clear all non-core tickers?'))return;WL=[...CORE];saveWL();renderWL();}
+function saveWL(){localStorage.setItem('sis_wl',JSON.stringify(WL));}
+function renderWL(){
+  const el=document.getElementById('wlC');
+  if(!WL.length){el.innerHTML='<span style="font-size:9px;color:var(--t4);">Empty</span>';return;}
+  el.innerHTML=WL.map(t=>`<div class="chip">${t}<span class="cx" onclick="removeT('${t}')">x</span></div>`).join('');
+}
+
+// ── Auto-watchlist with pruning ──
+async function loadAutoWl(){
+  if(!K.sbU||!K.sbK){document.getElementById('autoWlArea').innerHTML='<div style="font-size:9px;color:var(--t4);">Add Supabase keys first</div>';return;}
+  try{
+    const data=await sbGet('watchlist','order=created_at.desc&limit=100');
+    if(!Array.isArray(data)||!data.length){
+      document.getElementById('autoWlArea').innerHTML='<div style="font-size:9px;color:var(--t4);">No auto-added tickers yet</div>';
+      return;
+    }
+
+    const now=new Date();
+    const active=data.filter(row=>{
+      if(CORE.includes(row.ticker))return true; // never prune core
+      const age=(now-new Date(row.created_at))/(1000*60*60*24);
+      return age<=EXPIRE_DAYS;
+    }).slice(0,MAX_AUTO_WL);
+
+    // Merge into local watchlist
+    let added=0;
+    active.forEach(row=>{
+      if(row.ticker&&!WL.includes(row.ticker)){WL.push(row.ticker);added++;}
+    });
+    if(added>0){saveWL();renderWL();}
+
+    const expired=data.length-active.length;
+    document.getElementById('autoWlArea').innerHTML=
+      `<div style="font-size:8px;color:var(--t3);margin-bottom:8px;">${active.length} active &#183; ${expired} expired &#183; max ${MAX_AUTO_WL} &#183; expires after ${EXPIRE_DAYS} days</div>`+
+      active.map(row=>{
+        const age=Math.floor((now-new Date(row.created_at))/(1000*60*60*24));
+        const isCore=CORE.includes(row.ticker);
+        return `<div style="display:flex;align-items:center;justify-content:space-between;padding:6px 0;border-bottom:1px solid var(--b1);">
+          <div>
+            <span style="font-family:var(--disp);font-size:14px;color:#fff;">${row.ticker}</span>
+            <span class="wli-cv auto" style="margin-left:5px;">${isCore?'CORE':'AUTO'}</span>
+            <div style="font-size:8px;color:var(--t3);margin-top:1px;">${row.theme||'—'} &#183; ${age}d ago</div>
+            <div style="font-size:9px;color:var(--t2);font-family:var(--sans);">${(row.reason||'').substring(0,45)}</div>
+          </div>
+          <button class="btn btn-gh btn-sm" onclick="loadA('${row.ticker}')">Analyse</button>
+        </div>`;
+      }).join('');
+
+    if(added>0)toast(`Synced ${added} ticker${added>1?'s':''}`);
+  }catch(e){document.getElementById('autoWlArea').innerHTML=`<div class="err">Sync error: ${e.message}</div>`;}
+}
+
+async function pruneAutoWl(){
+  if(!K.sbU||!K.sbK){toast('Supabase keys required','warn');return;}
+  try{
+    const cutoff=new Date(Date.now()-EXPIRE_DAYS*864e5).toISOString();
+    // Delete expired non-core tickers
+    const coreList=CORE.map(t=>`ticker.neq.${t}`).join(',');
+    await sbDelete('watchlist',`created_at=lt.${cutoff}&${coreList}`);
+    toast('Old tickers pruned');
+    await loadAutoWl();
+  }catch(e){toast('Prune error','err');}
+}
+
+async function syncSupabaseWatchlist(){
+  if(!K.sbU||!K.sbK)return;
+  try{
+    const data=await sbGet('watchlist','order=created_at.desc&limit=100');
+    if(!Array.isArray(data))return;
+    const now=new Date();
+    let added=0;
+    data.filter(row=>CORE.includes(row.ticker)||(now-new Date(row.created_at))/(864e5)<=EXPIRE_DAYS)
+      .slice(0,MAX_AUTO_WL)
+      .forEach(row=>{if(row.ticker&&!WL.includes(row.ticker)){WL.push(row.ticker);added++;}});
+    if(added>0){saveWL();renderWL();}
+  }catch(e){}
+}
+
+// ── Terminal ──
+async function fetchSnap(ticker){
+  try{
+    const url=`https://query1.finance.yahoo.com/v8/finance/chart/${ticker}?range=5d&interval=1d&includePrePost=false`;
+    const r=await fetch(YP+encodeURIComponent(url));
+    const j=await r.json();
+    const res=j.chart?.result?.[0];if(!res)return null;
+    const q=res.indicators?.quote?.[0]||{};
+    const vols=(q.volume||[]).filter(v=>v!=null);
+    const cls=(q.close||[]).filter(c=>c!=null);
+    if(vols.length<2||cls.length<2)return null;
+    const lv=vols[vols.length-1],av=vols.slice(0,-1).reduce((a,b)=>a+b,0)/(vols.length-1);
+    const p=cls[cls.length-1],pv=cls[cls.length-2];
+    const ch=pv>0?((p-pv)/pv*100):0;
+    return{ticker,p:p.toFixed(2),ch:ch.toFixed(2),vol:lv,av:Math.round(av),vr:(lv/av).toFixed(2)};
+  }catch{return null;}
+}
+
+async function refreshTerminal(){
+  await syncSupabaseWatchlist();
+  if(!WL.length){toast('Add tickers first','warn');nav('settings');return;}
+  const btn=document.getElementById('btnRef');btn.disabled=true;btn.textContent='...';
+  setTS(true,'Loading...');
+  const snaps=[];
+  for(const t of WL.slice(0,25)){const s=await fetchSnap(t);if(s)snaps.push(s);await sl(120);}
+  renderLiveWL(snaps);renderVM(snaps);
+  await checkCustomAlerts(snaps);
+  btn.disabled=false;btn.textContent='&#8635; NOW';
+  setTS(false,`${snaps.length} tickers loaded`);
+  document.getElementById('tTime').textContent=new Date().toLocaleTimeString('en-GB',{hour:'2-digit',minute:'2-digit'});
+}
+
+function renderLiveWL(snaps){
+  if(!snaps.length){document.getElementById('wlLive').innerHTML='<div class="empty"><div class="ei">&#128203;</div>No data</div>';return;}
+  const sorted=[...snaps].sort((a,b)=>Math.abs(parseFloat(b.ch))-Math.abs(parseFloat(a.ch)));
+  const alerts=getAlerts();
+  document.getElementById('wlLive').innerHTML=sorted.map((s,i)=>{
+    const cn=parseFloat(s.ch),cs=cn>=0?'up':'dn',sg=cn>=0?'+':'';
+    const vr=parseFloat(s.vr),cc=vr>=2?'h':vr>=1.5?'m':'w';
+    const cl=vr>=2?'&#128293; '+s.vr+'x vol':vr>=1.5?'&#9889; '+s.vr+'x vol':s.vr+'x vol';
+    const th=(TM[s.ticker]||'&#8212;').substring(0,22);
+    const hasAlert=!!alerts[s.ticker];
+    const snapJson=JSON.stringify(s).replace(/"/g,'&quot;');
+    return `<div class="wli" onclick='openStockDetail(${JSON.stringify(s)})'>
+      <div class="wli-l"><div class="wli-rk">${i+1}</div>
+      <div><div class="wli-tk">${s.ticker}${hasAlert?' <span style="font-size:8px;color:var(--am)">&#128276;</span>':''}</div>
+      <div class="wli-info">${th}</div></div></div>
+      <div class="wli-r"><div class="wli-pr">$${s.p}</div>
+      <div class="wli-ch ${cs}">${sg}${s.ch}%</div>
+      <span class="wli-cv ${cc}">${cl}</span></div></div>`;
+  }).join('');
+}
+
+function renderVM(snaps){
+  if(!snaps.length)return;
+  const s=[...snaps].sort((a,b)=>parseFloat(b.vr)-parseFloat(a.vr)).slice(0,10);
+  const mx=parseFloat(s[0]?.vr||1);
+  document.getElementById('volM').innerHTML=s.map(x=>{
+    const vr=parseFloat(x.vr),pct=Math.min(vr/mx*100,100);
+    const bc=vr>=2?'g':vr>=1.5?'a':'r';
+    const cn=parseFloat(x.ch),sg=cn>=0?'+':'';
+    return `<div class="vmr">
+      <div class="vmr-tk">${x.ticker}</div>
+      <div class="vmr-bw"><div class="vmr-bg"><div class="vmr-bf ${bc}" style="width:${pct}%"></div></div></div>
+      <div class="vmr-st"><div>${x.vr}x</div><div class="vmr-ch ${cn>=0?'up':'dn'}">${sg}${x.ch}%</div></div>
+    </div>`;
+  }).join('');
+}
+
+function setTS(a,msg){
+  const d=document.getElementById('tDot');
+  d.style.background=a?'var(--g)':'var(--t2)';d.style.animation=a?'blink 2s ease-in-out infinite':'none';
+  document.getElementById('tStat').textContent=msg;
+}
+function toggleAuto(){
+  const btn=document.getElementById('btnAuto'),pl=document.getElementById('lAR'),dot=document.getElementById('dAR');
+  if(autoOn){clearInterval(autoIv);autoOn=false;btn.className='btn btn-gh btn-sm';btn.textContent='AUTO';pl.textContent='Auto: OFF';dot.style.background='var(--am)';dot.style.animation='none';toast('Auto off');}
+  else{autoOn=true;btn.className='btn btn-g btn-sm';btn.textContent='STOP';pl.textContent='Auto: 5min';dot.style.background='var(--g)';dot.style.animation='blink 2s ease-in-out infinite';refreshTerminal();autoIv=setInterval(refreshTerminal,5*60*1000);toast('Auto every 5 min');}
+}
+
+// ── Stock Detail & Alerts ──
+function openStockDetail(snap){
+  currentDetailSnap=snap;
+  const chgN=parseFloat(snap.ch),sg=chgN>=0?'+':'';
+  document.getElementById('sdTicker').textContent=snap.ticker;
+  document.getElementById('sdTheme').textContent=TM[snap.ticker]||'&#8212;';
+  document.getElementById('sdPrice').textContent='$'+snap.p;
+  const ce=document.getElementById('sdChg');ce.textContent=sg+snap.ch+'%';ce.className='sd-price-chg '+(chgN>=0?'up':'dn');
+  document.getElementById('sdVol').textContent=snap.vol?(snap.vol/1e6).toFixed(2)+'M':'&#8212;';
+  document.getElementById('sdVR').textContent=snap.vr+'x';
+  document.getElementById('sdAvg').textContent=snap.av?(snap.av/1e6).toFixed(2)+'M':'&#8212;';
+  const a=getAlerts()[snap.ticker]||{};
+  document.getElementById('alertPct').value=a.pct||'';
+  document.getElementById('alertTargetUp').value=a.targetUp||'';
+  document.getElementById('alertTargetDn').value=a.targetDn||'';
+  document.getElementById('alertSaved').style.display='none';
+  document.getElementById('stockDetail').classList.remove('hidden');
+}
+function closeStockDetail(e){
+  if(!e||e.target===document.getElementById('stockDetail')){
+    document.getElementById('stockDetail').classList.add('hidden');currentDetailSnap=null;
+  }
+}
+function loadAFromDetail(){if(!currentDetailSnap)return;closeStockDetail();loadA(currentDetailSnap.ticker);}
+function getAlerts(){return JSON.parse(localStorage.getItem('sis_alerts')||'{}');}
+function saveAlerts(a){localStorage.setItem('sis_alerts',JSON.stringify(a));}
+function saveAlert(){
+  if(!currentDetailSnap)return;
+  const t=currentDetailSnap.ticker,al=getAlerts();
+  al[t]={pct:parseFloat(document.getElementById('alertPct').value)||null,
+    targetUp:parseFloat(document.getElementById('alertTargetUp').value)||null,
+    targetDn:parseFloat(document.getElementById('alertTargetDn').value)||null};
+  saveAlerts(al);document.getElementById('alertSaved').style.display='block';toast('Alert saved for '+t);
+}
+
+async function checkCustomAlerts(snaps){
+  if(!K.tgt||!K.tgc)return;
+  const alerts=getAlerts();
+  for(const snap of snaps){
+    const a=alerts[snap.ticker];if(!a)continue;
+    const price=parseFloat(snap.p),chg=parseFloat(snap.ch);
+    let triggered=false,triggerMsg='';
+    if(a.pct&&Math.abs(chg)>=a.pct){triggered=true;triggerMsg='Moved '+(chg>=0?'+':'')+snap.ch+'% (your '+a.pct+'% alert)';}
+    if(a.targetUp&&price>=a.targetUp){triggered=true;triggerMsg='Hit upside target $'+a.targetUp;}
+    if(a.targetDn&&price<=a.targetDn){triggered=true;triggerMsg='Hit downside target $'+a.targetDn;}
+    if(!triggered)continue;
+    const key='sis_alerted_'+snap.ticker+'_'+new Date().toDateString();
+    if(localStorage.getItem(key))continue;
+    localStorage.setItem(key,'1');
+    const summary=await getMoveSummary(snap.ticker,snap.p,snap.ch,snap.vr);
+    const sg=chg>=0?'+':'',em=chg>=0?'UP':'DOWN';
+    const msg=`${chg>=0?'📈':'📉'} *PRICE ALERT — $${snap.ticker}*\n━━━━━━━━━━━━━━━━━━\n*Trigger:* ${triggerMsg}\n*Price:* $${snap.p} (${sg}${snap.ch}% today)\n*Volume:* ${snap.vr}x average\n*Theme:* ${TM[snap.ticker]||'—'}\n\n*Why it moved:*\n↳ ${summary}\n\n_Open SIS to analyse →_\n_SIS Alerts · ${new Date().toLocaleTimeString('en-GB',{hour:'2-digit',minute:'2-digit'})} UTC_`;
+    await sendTg(msg);toast('Alert fired: '+snap.ticker);await sl(500);
+  }
+}
+
+async function getMoveSummary(ticker,price,chg,vr){
+  try{
+    const r=await fetch('/api/claude',{method:'POST',headers:{'Content-Type':'application/json'},
+      body:JSON.stringify({model:'claude-sonnet-4-20250514',max_tokens:100,
+        messages:[{role:'user',content:`${ticker} moved ${chg}% today with ${vr}x avg volume at $${price}. Macro: Hormuz crisis (Qatar LNG offline), Agentic AI compute boom. One sentence: most likely second-order reason?`}]})});
+    const d=await r.json();return d.content?.[0]?.text?.trim()||'Check news for details.';
+  }catch{return 'Check news for details.';}
+}
+
+// ── News Signals ──
+async function loadSignals(){
+  const btn=document.getElementById('btnSig');btn.disabled=true;btn.textContent='...';
+  document.getElementById('sigLoad').style.display='flex';document.getElementById('sigArea').innerHTML='';
+  try{
+    const data=await sbGet('signals','order=created_at.desc&limit=50');
+    if(!Array.isArray(data))throw new Error('Invalid response');
+    allSignals=data;renderSignals();
+    btn.disabled=false;btn.textContent='&#8635; LOAD';document.getElementById('sigLoad').style.display='none';
+    if(!data.length)document.getElementById('sigArea').innerHTML='<div class="empty"><div class="ei">&#128225;</div>No signals yet &#8212; scanner populates every 30 min</div>';
+  }catch(e){
+    btn.disabled=false;btn.textContent='&#8635; LOAD';document.getElementById('sigLoad').style.display='none';
+    document.getElementById('sigArea').innerHTML=`<div class="err">Could not load: ${e.message}<br>Check Supabase keys in Keys menu</div>`;
+  }
+}
+function filterSigs(f){
+  sigFilter=f;
+  ['fAll','fHigh','fMed'].forEach(id=>document.getElementById(id).className='btn btn-gh btn-sm');
+  document.getElementById(f==='ALL'?'fAll':f==='HIGH'?'fHigh':'fMed').className='btn btn-g btn-sm';
+  renderSignals();
+}
+function renderSignals(){
+  let filtered=allSignals;
+  if(sigFilter!=='ALL')filtered=allSignals.filter(s=>s.signal_strength===sigFilter);
+  if(!filtered.length){document.getElementById('sigArea').innerHTML='<div class="empty"><div class="ei">&#128225;</div>No signals matching filter</div>';return;}
+  document.getElementById('sigArea').innerHTML=filtered.map(sig=>{
+    const str=sig.signal_strength||'LOW';
+    const tickers=(sig.tickers||[]).slice(0,5);
+    const timeAgo=sig.created_at?timeSince(new Date(sig.created_at)):'&#8212;';
+    // Build article search URL from headline
+    const searchQ=encodeURIComponent((sig.headline||'').substring(0,80));
+    const searchUrl=`https://www.google.com/search?q=${searchQ}`;
+    return `<div class="sig-card ${str}">
+      <div class="sig-top"><div class="sig-hl">${sig.headline||'&#8212;'}</div><span class="sig-badge ${str}">${str}</span></div>
+      ${sig.second_order?`<div class="sig-2nd">&#8627; ${sig.second_order}</div>`:''}
+      <div class="sig-meta" style="margin-bottom:10px;">
+        <span>${sig.source||'&#8212;'}</span>
+        <span>${sig.theme||'&#8212;'}</span>
+        <span class="sig-time">${timeAgo}</span>
+      </div>
+      <div style="display:flex;flex-wrap:wrap;gap:6px;align-items:center;">
+        ${tickers.map(t=>`<button class="btn btn-g btn-sm" onclick="loadA('${t}')" style="font-family:var(--disp);font-size:13px;letter-spacing:1px;padding:4px 10px;">${t}</button>`).join('')}
+        <a href="${searchUrl}" target="_blank" style="display:inline-flex;align-items:center;gap:4px;padding:4px 10px;border:1px solid var(--b3);border-radius:5px;font-size:8px;color:var(--t2);text-decoration:none;letter-spacing:1px;text-transform:uppercase;transition:all .12s;" onmouseover="this.style.borderColor='var(--gbdr)';this.style.color='var(--g)'" onmouseout="this.style.borderColor='var(--b3)';this.style.color='var(--t2)'">&#128279; Read Article</a>
+        <button onclick="loadSignalIntoPaste(${JSON.stringify(sig).replace(/"/g,'&quot;')})" style="display:inline-flex;align-items:center;gap:4px;padding:4px 10px;border:1px solid var(--b3);border-radius:5px;font-size:8px;color:var(--t2);background:transparent;cursor:pointer;letter-spacing:1px;text-transform:uppercase;font-family:var(--mono);" onmouseover="this.style.borderColor='var(--gbdr)';this.style.color='var(--g)'" onmouseout="this.style.borderColor='var(--b3)';this.style.color='var(--t2)'">&#9889; Analyse</button>
+      </div>
+    </div>`;
+  }).join('');
+}
+
+function loadSignalIntoPaste(sig){
+  const text=`Source: ${sig.source||'—'}\nHeadline: ${sig.headline||'—'}\nTheme: ${sig.theme||'—'}\nSecond order: ${sig.second_order||'—'}\nSignal strength: ${sig.signal_strength||'—'}\nTickers: ${(sig.tickers||[]).join(', ')||'—'}`;
+  document.getElementById('pasteIn').value=text;
+  // Clear previous state
+  document.getElementById('pQs').style.display='none';
+  document.getElementById('pVerd').innerHTML='';
+  document.getElementById('qaC').innerHTML='';
+  pOrig=text;
+  // Immediately trigger smart Q&A tailored to this signal
+  triggerSignalQA(sig);
+}
+
+async function triggerSignalQA(sig){
+  const btn=document.getElementById('btnPG');
+  btn.disabled=true;btn.textContent='Building Gemini prompt...';
+  showPL('Generating research prompt...');
+
+  const headline=sig.headline||'';
+  const theme=sig.theme||'';
+  const second=sig.second_order||'';
+  const tickers=(sig.tickers||[]).join(', ')||'';
+
+  try{
+    const resp=await claude([{role:'user',content:
+      `You are preparing a data retrieval prompt for Gemini. Gemini has live web access. Claude does not. Claude will do ALL analysis — Gemini is only a tool to retrieve raw data and facts from the internet.
+
+Read this article and signal carefully:
+- Headline: ${headline}
+- Theme: ${theme}
+- Tickers mentioned: ${tickers}
+- Article: ${pOrig.substring(0,2000)}
+
+Your job: Write a comprehensive Gemini prompt that retrieves EVERYTHING useful for a complete, precise trade analysis. Think about what real-world data would make the difference between a good analysis and a precise one. Ask for anything and everything that Claude cannot access itself — the more relevant data Gemini retrieves, the more accurate the final analysis will be.
+
+Ask Gemini for ALL of the following categories where relevant to this specific signal:
+
+MARKET DATA:
+- Current price, today % change, 52-week high/low for every relevant ticker (direct plays + likely picks-and-shovels)
+- Current price of any relevant commodity (oil, LNG, gold, copper, uranium etc.)
+- Current relevant indices or sector ETF performance (XLE, ITA, XOP etc.)
+- Any significant pre/post-market moves on relevant tickers
+
+COMPANY FUNDAMENTALS (current figures):
+- Revenue last 3 years (specific numbers)
+- EBIT most recent annual and TTM
+- Enterprise Value
+- Operating margin and gross margin
+- Free cash flow
+- Debt levels and cash on hand
+- Analyst consensus: Buy/Hold/Sell count + median and high price targets
+- Current P/E, EV/EBITDA vs sector average
+
+ORDER BOOK & BACKLOG (critical for defence/government stocks):
+- Current backlog or order book value
+- What % of next 12 months revenue is already contracted
+- Any recent contract wins or losses (last 30 days)
+- Specific program names that would benefit from the signal
+
+RECENT EVENTS (last 14 days):
+- Earnings releases, guidance changes, revenue surprises
+- Analyst upgrades or downgrades with specific price target changes
+- Major contract awards or cancellations
+- Insider buying or selling
+- Any secondary offerings or buybacks announced
+
+UPCOMING CATALYSTS:
+- Next earnings date for each ticker
+- Any scheduled government decisions, budget votes, or policy announcements relevant to the theme
+- Upcoming contract award decisions
+- Any regulatory decisions pending
+
+SIGNAL-SPECIFIC REAL-WORLD DATA:
+Based on the article, identify and ask for the specific real-world facts that would most affect the trade thesis. Examples:
+- If defence signal: current defence budget figures, specific program funding status, congressional vote timelines
+- If energy signal: current oil/LNG prices, shipping rates, pipeline capacity figures, storage levels
+- If AI signal: current data centre build rates, power consumption figures, specific company capex guidance
+- If geopolitical signal: current status of the event, diplomatic timeline, sanctions details
+- Ask for anything mentioned specifically in the article that has a current real-world status
+
+SUB-CONTRACTOR / SECOND-TIER DATA:
+- For any prime contractor mentioned, ask who their top 3-5 suppliers are for the relevant program
+- Ask for those suppliers' current prices and recent news
+- This is where the asymmetric opportunity often lives
+
+CRITICAL INSTRUCTION FOR GEMINI:
+Return ONLY facts, numbers, dates, and direct quotes from official sources. Do NOT analyse, interpret, recommend, or conclude anything. Do NOT say what the data means. Just return the raw data in a clean, organised format. Claude will do all the analysis.
+
+Write the Gemini prompt now. Make it specific to THIS signal and THIS article. Include actual ticker names and specific questions based on what the article says. The more precise the data Gemini returns, the better the analysis Claude can produce.`
+    }]);
+
+    // Show the Gemini prompt in a copyable box
+    pQs = ['Paste Gemini response here'];
+    document.getElementById('qaC').innerHTML=`
+      <div class="qa-i">
+        <div class="qa-q" style="color:var(--g);font-size:11px;margin-bottom:8px;">&#128200; Copy this prompt and paste it into Gemini (gemini.google.com)</div>
+        <div style="background:var(--bg);border:1px solid var(--gbdr);border-radius:6px;padding:12px 14px;font-size:10px;color:var(--t1);line-height:1.7;font-family:var(--sans);white-space:pre-wrap;margin-bottom:8px;">${resp}</div>
+        <button class="btn btn-g btn-sm btn-full" onclick="navigator.clipboard.writeText(${JSON.stringify(resp)});toast('&#10003; Copied — paste into Gemini')">
+          &#10011; COPY GEMINI PROMPT
+        </button>
+      </div>
+      <div class="qa-i" style="margin-top:8px;">
+        <div class="qa-q">Paste Gemini's full response here, then hit Get Verdict</div>
+        <textarea class="qa-a" id="qa0" placeholder="Paste Gemini's complete response here..." rows="6" style="resize:vertical;min-height:120px;display:block;"></textarea>
+      </div>`;
+
+    // Start research chat — show the Gemini prompt, don't add to history yet (assistant can't be first)
+    document.getElementById('pQs').style.display='block';
+    researchHistory = [];
+    // Show the Gemini prompt as Claude's opening message
+    document.getElementById('researchThread').innerHTML = renderResearchMsg('claude', resp);
+    // Add a synthetic context entry so history tracks the opening
+    researchHistory.push({role:'user', content: 'Here is the signal I am analysing: ' + pOrig.substring(0,500)});
+    researchHistory.push({role:'assistant', content: resp});
+    document.getElementById('researchInput').placeholder = 'Paste Gemini response here, or add your own context...';
+    document.getElementById('researchInput').focus();
+    hidePL();btn.disabled=false;btn.textContent='&#9889; ANALYSE THIS';
+    toast('Paste Gemini data or add context &#8594; Send &#8594; Get Verdict when ready');
+
+  }catch(e){
+    hidePL();btn.disabled=false;btn.textContent='&#9889; ANALYSE THIS';
+    document.getElementById('pVerd').innerHTML=`<div class="err">Error: ${e.message}</div>`;
+  }
+}
+
+
+// ── Paste & Analyse ──
+let researchHistory = [];
+
+async function startPaste(){
+  const text=document.getElementById('pasteIn').value.trim();
+  if(!text){toast('Paste something first','warn');return;}
+  pOrig=text;
+  researchHistory=[];
+  document.getElementById('researchThread').innerHTML='';
+  document.getElementById('researchInput').value='';
+  document.getElementById('pVerd').innerHTML='';
+  const btn=document.getElementById('btnPG');btn.disabled=true;btn.textContent='Building prompt...';
+  showPL('Reading signal...');
+  const fakeSig={headline:text.substring(0,120),theme:'',second_order:'',tickers:[],source:'Manual paste'};
+  await triggerSignalQA(fakeSig);
+}
+
+function renderResearchMsg(role, text){
+  const isUser = role === 'user';
+  const label = isUser ? 'You' : 'SIS Analyst';
+  const color = isUser ? 'var(--t2)' : 'var(--g)';
+  const bg = isUser ? 'var(--bg3)' : 'var(--bg2)';
+  const border = isUser ? 'var(--b3)' : 'var(--b2)';
+  
+  // Check if it contains a Gemini prompt (starts with "For these tickers" or similar)
+  const hasGeminiPrompt = text.includes('For these tickers') || text.includes('Please provide') || text.length > 400;
+  
+  let copyBtn = '';
+  if(!isUser && hasGeminiPrompt){
+    const escaped = JSON.stringify(text);
+    copyBtn = `<button class="btn btn-g btn-sm" onclick="navigator.clipboard.writeText(${escaped});toast('Copied — paste into Gemini')" style="margin-top:8px;font-size:8px;">&#10011; COPY GEMINI PROMPT</button>`;
+  }
+  
+  return `<div style="margin-bottom:10px;animation:fi .18s ease;">
+    <div style="font-size:7px;letter-spacing:2px;text-transform:uppercase;color:${color};margin-bottom:4px;">${label}</div>
+    <div style="background:${bg};border:1px solid ${border};border-radius:8px;padding:10px 12px;font-size:11px;line-height:1.7;font-family:var(--sans);color:var(--t1);white-space:pre-wrap;">${text}</div>
+    ${copyBtn}
+  </div>`;
+}
+
+async function sendResearch(){
+  const input = document.getElementById('researchInput');
+  const msg = input.value.trim();
+  if(!msg){toast('Type something first','warn');return;}
+  
+  // Add user message to thread
+  const thread = document.getElementById('researchThread');
+  thread.innerHTML += renderResearchMsg('user', msg);
+  researchHistory.push({role:'user', content: msg});
+  input.value='';
+  thread.scrollTop = thread.scrollHeight;
+  
+  const btn = document.getElementById('btnSendResearch');
+  btn.disabled=true;btn.textContent='...';
+  showPL('Thinking...');
+  
+  try{
+    // Build clean message history
+    const systemPrompt = `${SYS}
+
+Original signal: "${pOrig.substring(0,800)}"
+
+You are in a live research session. Trader is building conviction before final verdict.
+- Pasted Gemini data: acknowledge it, identify gaps, ask follow-up OR confirm ready
+- Question: answer directly and concisely
+- Observation: engage analytically  
+- Need more data: write a short specific Gemini follow-up prompt
+- Have enough: end with "✓ Ready — tap GET VERDICT for the full analysis"
+Keep responses conversational. Save full structured analysis for GET VERDICT.`;
+
+    const validHistory = researchHistory.filter(m => m.role==='user'||m.role==='assistant');
+    const resp = await claude(validHistory, systemPrompt);
+    researchHistory.push({role:'assistant', content: resp});
+    thread.innerHTML += renderResearchMsg('claude', resp);
+    thread.scrollTop = thread.scrollHeight;
+    hidePL();btn.disabled=false;btn.textContent='&#8593; SEND';
+    
+  }catch(e){
+    hidePL();btn.disabled=false;btn.textContent='&#8593; SEND';
+    thread.innerHTML += renderResearchMsg('claude', 'Error: '+e.message);
+  }
+}
+
+async function getVerdict(){
+  const btn=document.getElementById('btnPV');btn.disabled=true;btn.textContent='Analysing...';
+  showPL('Building conviction...');
+  // Build research context from the conversation history
+  const researchContext = researchHistory.map(m =>
+    `${m.role === 'user' ? 'TRADER' : 'ANALYST'}: ${m.content}`
+  ).join('\n\n');
+  try{
+    const resp=await claude([{role:'user',content:`${SYS}\n\nOriginal signal:\n"${pOrig}"\n\nMy answers:\n${answers}\n\nThe Gemini data above contains live prices, fundamentals and recent events. Use it as raw inputs only — do not adopt any analysis or interpretation from it.
+
+Now apply your full two-layer framework to this signal:
+
+LAYER 1 — THEMATIC MOMENTUM:
+- Signal type: Breaking News / Supply Chain / AI Prediction
+- Second-order plays: who supplies, enables, or benefits beyond the obvious? Look for angles the market hasn't priced yet
+- Timing: Early / On-time / Late in the information cycle? Be honest
+- Thematic score /10
+
+LAYER 2 — MAGIC FORMULA (use the EBIT and EV figures from Gemini data):
+- Return on Capital and Earnings Yield for each candidate
+- Score: Strong / Moderate / Weak
+- Flag if growth company caveat applies
+
+## VERDICT & BEST TRADE
+## PICKS AND SHOVELS
+(3 specific tickers — direct play, picks-and-shovels, second-order. Use live prices from Gemini data for entry levels)
+## THE THREE QUESTIONS
+(Why higher? What proves me wrong? Early/On-time/Late?)
+## THEMATIC SCORE & MAGIC FORMULA
+## ENTRY STRATEGY
+(Entry price in $, position size in £ only — never mention share counts, Claude cannot calculate shares accurately across GBP/USD)
+## STOP LOSS
+(Hard stop + maximum £ loss)
+## PROFIT TARGETS
+(T1, T2, T3 with specific prices)
+## THESIS EXIT TRIGGERS
+## TOP RISKS
+## ANALYST'S VERDICT
+
+Real £ amounts for £13,000 portfolio. PASS is a valid and often correct verdict. If the trade is late-cycle, say so clearly.`}]);
+    renderVerdict(resp);hidePL();btn.disabled=false;btn.textContent='&#9889; GET VERDICT NOW';
+  }catch(e){hidePL();btn.disabled=false;btn.textContent='&#9889; GET VERDICT NOW';document.getElementById('pVerd').innerHTML=`<div class="err">Error: ${e.message}</div>`;}
+}
+function renderVerdict(text){
+  // Only read verdict from the VERDICT line itself — not from body text
+  // Look for the verdict in the first 300 chars or after "VERDICT" heading
+  const verdictSection = text.match(/##\s*VERDICT[^\n]*\n([^\n]+)/i)?.[1] || text.substring(0,300);
+  const sb=/STRONG BUY/i.test(verdictSection);
+  const buy=!sb&&/\bBUY\b/i.test(verdictSection)&&!/PASS.*BUY|BUY.*PASS/i.test(verdictSection);
+  const pass=/\b(PASS|AVOID)\b/i.test(verdictSection);
+  const watch=/\bWATCHLIST\b/i.test(verdictSection);
+  const vc=sb?'vb-b':buy&&!pass?'vb-b':pass?'vb-p':'vb-w';
+  const vl=sb?'STRONG BUY':buy&&!pass?'BUY':pass?'PASS':'WATCHLIST';
+  document.getElementById('pVerd').innerHTML=`<div class="ao"><div class="ao-h"><div class="ao-tk">SIGNAL ANALYSIS</div><div class="vb ${vc}">${vl}</div></div><div class="ao-body">${fmt(text)}</div><div class="ao-f"><button class="btn btn-gh btn-sm" onclick="navigator.clipboard.writeText(${JSON.stringify(text)})">Copy</button><button class="btn btn-gh btn-sm" onclick="clearPaste()">CLEAR</button></div></div>`;
+}
+function clearPaste(){
+  document.getElementById('pasteIn').value='';document.getElementById('pQs').style.display='none';
+  document.getElementById('pVerd').innerHTML='';document.getElementById('qaC').innerHTML='';
+  pQs=[];pOrig='';document.getElementById('btnPG').disabled=false;document.getElementById('btnPG').textContent='&#9889; ANALYSE THIS';
+}
+function showPL(m){document.getElementById('pLoad').style.display='flex';document.getElementById('pLoadT').textContent=m;}
+function hidePL(){document.getElementById('pLoad').style.display='none';}
+
+// ── Chat ──
+async function sendChat(){
+  const inp=document.getElementById('ciIn');const msg=inp.value.trim();
+  if(!msg)return;inp.value='';ar(inp);addMsg('u',msg);chatHist.push({role:'user',content:msg});
+  document.getElementById('cSend').disabled=true;const tid=addTyping();
+  try{
+    const resp=await claude(chatHist,SYS);
+    rmTyping(tid);addMsg('c',resp);chatHist.push({role:'assistant',content:resp});
+    if(chatHist.length>20)chatHist=chatHist.slice(-16);
+  }catch(e){rmTyping(tid);addMsg('c','Error: '+e.message);}
+  document.getElementById('cSend').disabled=false;
+}
+function qk(t){document.getElementById('ciIn').value=t;sendChat();}
+function addMsg(role,text){
+  const el=document.getElementById('chatMsgs');
+  const tm=new Date().toLocaleTimeString('en-GB',{hour:'2-digit',minute:'2-digit'});
+  const d=document.createElement('div');d.className=`msg msg-${role}`;
+  d.innerHTML=`<div><div class="bbl">${role==='u'?text.replace(/</g,'&lt;'):fmt(text)}</div><div class="msg-meta">${role==='u'?'You':'SIS Analyst'} · ${tm}</div></div>`;
+  el.appendChild(d);el.scrollTop=el.scrollHeight;
+}
+function addTyping(){
+  const el=document.getElementById('chatMsgs');const id='ty'+Date.now();
+  const d=document.createElement('div');d.className='msg msg-c';d.id=id;
+  d.innerHTML='<div><div class="typing"><div class="td"></div><div class="td"></div><div class="td"></div></div></div>';
+  el.appendChild(d);el.scrollTop=el.scrollHeight;return id;
+}
+function rmTyping(id){document.getElementById(id)?.remove();}
+function clearChat(){
+  chatHist=[];
+  document.getElementById('chatMsgs').innerHTML='<div class="msg msg-c"><div><div class="bbl"><strong>Chat cleared.</strong><br>Ask me anything.</div><div class="msg-meta">SIS Analyst · Ready</div></div></div>';
+}
+
+// ── Analyser ──
+async function runAnalysis(){
+  const t=document.getElementById('aTk').value.trim().toUpperCase();
+  if(!t){toast('Enter a ticker','warn');return;}
+  const tm=document.getElementById('aTm').value,cx=document.getElementById('aCx').value.trim(),ac=document.getElementById('aAc').value;
+  const btn=document.getElementById('btnA');btn.disabled=true;btn.textContent='Running...';
+  document.getElementById('aLoad').style.display='flex';document.getElementById('aOut').innerHTML='';
+  const ms=['Scanning...','Signal framework...','Magic Formula...','Trade plan...','Conviction...'];
+  let mi=0;const lt=setInterval(()=>{document.getElementById('aLT').textContent=ms[++mi%ms.length];},1400);
+  try{
+    const resp=await claude([{role:'user',content:`TICKER: ${t}\nACCOUNT: ${ac}${ac==='B'?' (BROTHER\'S CAPITAL)':''}\nTIMEFRAME: ${tm}\nCONTEXT: ${cx||'Use knowledge of '+t+' and current macro.'}\n\n## VERDICT\n## THE THREE QUESTIONS\n## FUTURE STATE (6M/12M/36M)\n## SIGNAL ALIGNMENT\n## MAGIC FORMULA QUALITY\n## ENTRY STRATEGY\n## STOP LOSS\n## PROFIT TARGETS\n## THESIS EXIT TRIGGERS\n## TOP RISKS\n## ANALYST'S VERDICT`}],SYS);
+    renderA(t,resp,ac);
+  }catch(e){document.getElementById('aOut').innerHTML=`<div class="err">Failed: ${e.message}</div>`;}
+  finally{clearInterval(lt);document.getElementById('aLoad').style.display='none';btn.disabled=false;btn.textContent='&#9889; RUN FULL ANALYSIS';}
+}
+function renderA(t,text,ac){
+  const verdictSection=text.match(/##\s*VERDICT[^\n]*\n([^\n]+)/i)?.[1]||text.substring(0,300);
+  const sb=/STRONG BUY/i.test(verdictSection);
+  const buy=!sb&&/\bBUY\b/i.test(verdictSection)&&!/PASS.*BUY|BUY.*PASS/i.test(verdictSection);
+  const pass=/\b(PASS|AVOID)\b/i.test(verdictSection);
+  const vc=sb?'vb-b':buy&&!pass?'vb-b':pass?'vb-p':'vb-w';
+  const vl=sb?'STRONG BUY':buy&&!pass?'BUY':pass?'PASS':'WATCHLIST';
+  document.getElementById('aOut').innerHTML=`<div class="ao"><div class="ao-h"><div><div class="ao-tk">${t}</div><div style="font-size:7px;color:var(--t3);margin-top:2px;">ACCOUNT ${ac} · ${new Date().toLocaleString('en-GB',{day:'2-digit',month:'short',hour:'2-digit',minute:'2-digit'})}</div></div><div class="vb ${vc}">${vl}</div></div><div class="ao-body">${fmt(text)}</div><div class="ao-f"><button class="btn btn-gh btn-sm" onclick="navigator.clipboard.writeText(${JSON.stringify(t+' Analysis:\n\n'+text)})">Copy</button><button class="btn btn-gh btn-sm" onclick="if(!WL.includes('${t}')){WL.push('${t}');saveWL();renderWL();}toast('+ ${t}')">+ WL</button><button class="btn btn-gh btn-sm" onclick="document.getElementById('aOut').innerHTML='';document.getElementById('aTk').value=''">Clear</button></div></div>`;
+}
+function loadA(t){document.getElementById('aTk').value=t;nav('analyser');toast('Loaded '+t);}
+
+// ── Telegram ──
+async function sendTg(msg){
+  if(!K.tgt||!K.tgc)return false;
+  try{const r=await fetch(`https://api.telegram.org/bot${K.tgt}/sendMessage`,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({chat_id:K.tgc,text:msg,parse_mode:'Markdown'})});return r.ok;}catch{return false;}
+}
+async function testTg(){
+  if(!K.tgt){toast('Add bot token','warn');openModal();return;}
+  if(!K.tgc){toast('Add Chat ID','warn');openModal();return;}
+  const ok=await sendTg(`✅ *SIS Terminal Connected*\n\nAll systems live.\n_${new Date().toLocaleString('en-GB')}_`);
+  if(ok)toast('Test sent');else toast('Failed','err');
+}
+
+// ── Claude API ──
+async function claude(messages,system=null,opts={}){
+  const body={model:'claude-sonnet-4-20250514',max_tokens:opts.maxTokens||2500,messages};
+  if(system)body.system=system;
+  if(opts.webSearch)body.use_web_search=true;
+  const r=await fetch('/api/claude',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(body)});
+  const d=await r.json();
+  if(d.error)throw new Error(d.error.message);
+  return d._extracted_text||d.content?.filter(b=>b.type==='text').map(b=>b.text).join('\n')||'';
+}
+
+// ── Utils ──
+function fmt(t){
+  return t.replace(/## ([^\n]+)/g,'<h2>$1</h2>')
+    .replace(/\*\*([^*]+)\*\*/g,'<strong>$1</strong>')
+    .replace(/^- (.+)$/gm,'<li>$1</li>')
+    .replace(/(<li>.*?<\/li>\n?)+/gs,m=>'<ul>'+m+'</ul>')
+    .split('\n').map(l=>l.startsWith('<')||!l.trim()?l:`<p>${l}</p>`).join('\n');
+}
+function sl(ms){return new Promise(r=>setTimeout(r,ms));}
+function ar(el){el.style.height='auto';el.style.height=Math.min(el.scrollHeight,110)+'px';}
+let tT;
+function toast(msg,type=''){
+  const el=document.getElementById('toast');el.textContent=msg;
+  el.className='toast show'+(type?' '+type:'');
+  clearTimeout(tT);tT=setTimeout(()=>el.classList.remove('show'),2800);
+}
+
+// ═══════════════════════════════════════
+// PORTFOLIO TRACKER
+// ═══════════════════════════════════════
+
+function getTrades(){ return JSON.parse(localStorage.getItem('sis_trades')||'[]'); }
+function saveTrades(t){ localStorage.setItem('sis_trades',JSON.stringify(t)); }
+
+function openAddTrade(acc='A'){
+  document.getElementById('tr_date').value = new Date().toISOString().split('T')[0];
+  document.getElementById('tr_tick').value='';
+  document.getElementById('tr_price').value='';
+  document.getElementById('tr_size').value='';
+  document.getElementById('tr_stop').value='';
+  document.getElementById('tr_t1').value='';
+  document.getElementById('tr_t2').value='';
+  document.getElementById('tr_t3').value='';
+  document.getElementById('tr_thesis').value='';
+  document.getElementById('tr_texit').value='';
+  document.getElementById('tr_acc').value=acc;
+  document.getElementById('addTradeOv').classList.remove('hidden');
+}
+function closeAddTrade(){ document.getElementById('addTradeOv').classList.add('hidden'); }
+
+function saveTrade(){
+  const tick  = document.getElementById('tr_tick').value.trim().toUpperCase();
+  const action= document.getElementById('tr_action').value;
+  const acc   = document.getElementById('tr_acc').value;
+  const price = parseFloat(document.getElementById('tr_price').value);
+  const size  = parseFloat(document.getElementById('tr_size').value);
+  const stop  = parseFloat(document.getElementById('tr_stop').value)||null;
+  const t1    = parseFloat(document.getElementById('tr_t1').value)||null;
+  const t2    = parseFloat(document.getElementById('tr_t2').value)||null;
+  const t3    = parseFloat(document.getElementById('tr_t3').value)||null;
+  const thesis= document.getElementById('tr_thesis').value.trim();
+  const texit = document.getElementById('tr_texit').value.trim();
+  const date  = document.getElementById('tr_date').value;
+
+  if(!tick||!price||!size){ toast('Ticker, price and amount required','warn'); return; }
+
+  const trades = getTrades();
+  const isSell = action==='SELL';
+
+  if(isSell){
+    // Find matching open position and close it
+    const openPos = trades.find(t=>t.ticker===tick&&t.account===acc&&t.status==='OPEN'&&t.action==='BUY');
+    if(openPos){
+      openPos.status='CLOSED';
+      openPos.closePrice=price;
+      openPos.closeDate=date||new Date().toISOString().split('T')[0];
+      toast('Closed: '+tick+' at $'+price);
+    } else {
+      toast('No open position found for '+tick+' in Account '+acc,'warn');
+    }
+    // Log sell transaction
+    trades.unshift({
+      id:Date.now(),ticker:tick,action:'SELL',account:acc,
+      entryPrice:openPos?openPos.entryPrice:price,
+      closePrice:price,sizeGBP:size,
+      date:date||new Date().toISOString().split('T')[0],
+      status:'CLOSED',thesis:'Position closed at $'+price
+    });
+
+  } else {
+    // BUY — check if position already exists in this account
+    const existing = trades.find(t=>t.ticker===tick&&t.account===acc&&t.status==='OPEN'&&t.action==='BUY');
+
+    if(existing){
+      // ADD TO EXISTING — average up/down
+      const totalCost = existing.sizeGBP + size;
+      const totalShares_proxy = existing.sizeGBP/existing.entryPrice + size/price;
+      const newAvgEntry = totalCost / totalShares_proxy;
+      existing.sizeGBP = totalCost;
+      existing.entryPrice = parseFloat(newAvgEntry.toFixed(4));
+      // Update stop/targets if provided
+      if(stop) existing.stopLoss = stop;
+      if(t1) existing.target1 = t1;
+      if(t2) existing.target2 = t2;
+      if(t3) existing.target3 = t3;
+      if(thesis) existing.thesis = thesis;
+      if(texit) existing.thesisExit = texit;
+      toast('Added to '+tick+' — new avg $'+existing.entryPrice.toFixed(2)+', total £'+totalCost);
+    } else {
+      // NEW POSITION
+      trades.unshift({
+        id:Date.now(),
+        ticker:tick, action:'BUY', account:acc,
+        entryPrice:price, sizeGBP:size,
+        stopLoss:stop, target1:t1, target2:t2, target3:t3,
+        thesis, thesisExit:texit,
+        date:date||new Date().toISOString().split('T')[0],
+        status:'OPEN', closePrice:null,
+        imported:false,
+      });
+      toast('New position: '+tick+' £'+size+' at $'+price);
+    }
+  }
+
+  saveTrades(trades);
+  closeAddTrade();
+  refreshPortfolio();
+}
+
+function closeTrade(id){
+  const price = prompt('Close price ($)?');
+  if(!price) return;
+  const trades = getTrades();
+  const t = trades.find(x=>x.id===id);
+  if(!t) return;
+  t.status = 'CLOSED';
+  t.closePrice = parseFloat(price);
+  t.closeDate = new Date().toISOString().split('T')[0];
+  saveTrades(trades);
+  refreshPortfolio();
+  toast('Position closed');
+}
+
+function deleteTrade(id){
+  if(!confirm('Delete this trade?')) return;
+  saveTrades(getTrades().filter(x=>x.id!==id));
+  refreshPortfolio();
+}
+
+async function refreshPortfolio(){
+  const btn=document.getElementById('btnPF');
+  if(btn){btn.disabled=true;btn.textContent='...';}
+  const trades=getTrades();
+  const open=trades.filter(t=>t.status==='OPEN'&&t.action==='BUY');
+
+  // Fetch live prices
+  const prices={};
+  for(const t of open){
+    if(!prices[t.ticker]){
+      const snap=await fetchSnap(t.ticker);
+      if(snap) prices[t.ticker]={price:parseFloat(snap.p),chg:parseFloat(snap.ch)};
+      await sl(120);
+    }
+  }
+
+  // Render open trades
+  if(!open.length){
+    document.getElementById('pfA_pos').innerHTML='<div class="empty"><div class="ei">&#128202;</div>No open trades yet &#8212; tap + LOG TRADE</div>';
+  } else {
+    document.getElementById('pfA_pos').innerHTML = open.map(t=>{
+      const live=prices[t.ticker];
+      const lp=live?.price||t.entryPrice;
+      const chg=live?.chg||0;
+      const chgSign=chg>=0?'+':'';
+      const chgCol=chg>=0?'var(--g)':'var(--rd)';
+
+      // P&L from entry
+      const movePct=(lp-t.entryPrice)/t.entryPrice;
+      const curVal=t.sizeGBP*(1+movePct);
+      const pnl=curVal-t.sizeGBP;
+      const pnlSign=pnl>=0?'+':'';
+      const pnlCol=pnl>=0?'var(--g)':'var(--rd)';
+      const pnlPct=pnl/t.sizeGBP*100;
+
+      // Distance to stop and targets
+      const toStop=t.stopLoss?((lp-t.stopLoss)/lp*100):null;
+      const toT1=t.target1?((t.target1-lp)/lp*100):null;
+      const toT2=t.target2?((t.target2-lp)/lp*100):null;
+      const toT3=t.target3?((t.target3-lp)/lp*100):null;
+
+      // Alerts
+      const nearStop=t.stopLoss&&lp<=t.stopLoss*1.05;
+      const hitT1=t.target1&&lp>=t.target1;
+      const hitT2=t.target2&&lp>=t.target2;
+
+      return `<div style="padding:12px 0;border-bottom:1px solid var(--b1);">
+        <div style="display:flex;align-items:flex-start;justify-content:space-between;margin-bottom:8px;">
+          <div>
+            <div style="display:flex;align-items:center;gap:8px;">
+              <span style="font-family:var(--disp);font-size:22px;color:#fff;">${t.ticker}</span>
+              <span style="font-size:7px;background:var(--bg3);border:1px solid var(--b3);border-radius:3px;padding:1px 6px;color:var(--t3);">ACCT ${t.account}</span>
+              ${nearStop?'<span style="font-size:8px;color:var(--rd);font-weight:700;">&#9888; NEAR STOP</span>':''}
+              ${hitT1?'<span style="font-size:8px;color:var(--g);font-weight:700;">&#9650; T1 HIT</span>':''}
+              ${hitT2?'<span style="font-size:8px;color:var(--g);font-weight:700;">&#9650; T2 HIT</span>':''}
+            </div>
+            <div style="font-size:8px;color:var(--t3);margin-top:2px;">${t.date} &#183; Entry $${t.entryPrice.toFixed(2)} &#183; &#163;${t.sizeGBP}</div>
+          </div>
+          <div style="text-align:right;">
+            <div style="font-size:16px;font-weight:700;color:#fff;">$${lp.toFixed(2)}</div>
+            <div style="font-size:9px;color:${chgCol};">${chgSign}${chg.toFixed(2)}% today</div>
+          </div>
+        </div>
+
+        <!-- P&L row -->
+        <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:6px;margin-bottom:8px;">
+          <div style="background:var(--bg3);border-radius:4px;padding:7px 9px;">
+            <div style="font-size:6px;color:var(--t3);letter-spacing:1.5px;text-transform:uppercase;margin-bottom:2px;">Invested</div>
+            <div style="font-size:12px;font-weight:600;">&#163;${t.sizeGBP}</div>
+          </div>
+          <div style="background:var(--bg3);border-radius:4px;padding:7px 9px;">
+            <div style="font-size:6px;color:var(--t3);letter-spacing:1.5px;text-transform:uppercase;margin-bottom:2px;">Current Value</div>
+            <div style="font-size:12px;font-weight:600;">&#163;${curVal.toFixed(0)}</div>
+          </div>
+          <div style="background:var(--bg3);border-radius:4px;padding:7px 9px;border:1px solid ${pnlCol}30;">
+            <div style="font-size:6px;color:var(--t3);letter-spacing:1.5px;text-transform:uppercase;margin-bottom:2px;">P&amp;L</div>
+            <div style="font-size:12px;font-weight:700;color:${pnlCol};">${pnlSign}&#163;${Math.abs(pnl).toFixed(0)} <span style="font-size:9px;">(${pnlSign}${pnlPct.toFixed(1)}%)</span></div>
+          </div>
+        </div>
+
+        <!-- Stop & Targets -->
+        <div style="background:var(--bg);border:1px solid var(--b2);border-radius:5px;padding:8px 10px;margin-bottom:8px;font-size:9px;line-height:1.8;">
+          ${t.stopLoss?`<span style="color:${nearStop?'var(--rd)':'var(--t2)'};">&#9660; Stop $${t.stopLoss} <span style="color:var(--t3);">(${toStop!==null?toStop.toFixed(1)+'% away':'—'})</span></span>  `:'<span style="color:var(--t4);">No stop set &#8212; set one</span>  '}
+          ${t.target1?`<span style="color:${hitT1?'var(--g)':'var(--t2)'};">&#9650; T1 $${t.target1} <span style="color:var(--t3);">(${toT1!==null?(toT1>=0?'+':'')+toT1.toFixed(1)+'%':'hit'})</span></span>  `:''}
+          ${t.target2?`<span style="color:${hitT2?'var(--g)':'var(--t2)'};">&#9650; T2 $${t.target2} <span style="color:var(--t3);">(${toT2!==null?(toT2>=0?'+':'')+toT2.toFixed(1)+'%':'hit'})</span></span>  `:''}
+          ${t.target3?`<span style="color:var(--t2);">&#9650; T3 $${t.target3} <span style="color:var(--t3);">(${toT3!==null?(toT3>=0?'+':'')+toT3.toFixed(1)+'%':'—'})</span></span>`:''}
+        </div>
+
+        <!-- Thesis -->
+        ${t.thesis?`<div style="font-size:9px;color:var(--t2);font-family:var(--sans);margin-bottom:4px;font-style:italic;">"${t.thesis}"</div>`:''}
+        ${t.thesisExit?`<div style="font-size:8px;color:var(--t3);margin-bottom:8px;">Exit if: ${t.thesisExit}</div>`:''}
+
+        <!-- Actions -->
+        <div style="display:flex;gap:6px;flex-wrap:wrap;">
+          <button class="btn btn-g btn-sm" onclick="loadA('${t.ticker}')">&#9889; Analyse</button>
+          <button class="btn btn-gh btn-sm" onclick="closePosition(${t.id})">Close Trade</button>
+          <button class="btn btn-gh btn-sm" onclick="deleteTrade(${t.id})" style="color:var(--rd);border-color:var(--rbdr);">&#10005; Delete</button>
+        </div>
+      </div>`;
+    }).join('');
+  }
+
+  // Closed trades
+  const closed=trades.filter(t=>t.status==='CLOSED'&&t.action==='BUY'&&t.closePrice);
+  document.getElementById('pfClosed').innerHTML=closed.length?closed.map(t=>{
+    const movePct=(t.closePrice-t.entryPrice)/t.entryPrice;
+    const closeVal=t.sizeGBP*(1+movePct);
+    const pnl=closeVal-t.sizeGBP;
+    const sign=pnl>=0?'+':'';
+    const gc=pnl>=0?'var(--g)':'var(--rd)';
+    return `<div style="display:flex;align-items:center;justify-content:space-between;padding:9px 0;border-bottom:1px solid var(--b1);">
+      <div>
+        <div style="font-family:var(--disp);font-size:16px;color:#fff;">${t.ticker} <span style="font-size:7px;color:var(--t4);">ACCT ${t.account}</span></div>
+        <div style="font-size:8px;color:var(--t3);">${t.date}&#8594;${t.closeDate||'?'} &#183; $${t.entryPrice}&#8594;$${t.closePrice} &#183; &#163;${t.sizeGBP}</div>
+        ${t.thesis?`<div style="font-size:8px;color:var(--t2);font-style:italic;">"${t.thesis}"</div>`:''}
+      </div>
+      <div style="text-align:right;">
+        <div style="font-size:14px;font-weight:700;color:${gc};">${sign}&#163;${Math.abs(pnl).toFixed(0)}</div>
+        <div style="font-size:9px;color:${gc};">${sign}${(pnl/t.sizeGBP*100).toFixed(1)}%</div>
+      </div>
+    </div>`;
+  }).join(''):'<div class="empty"><div class="ei">&#128203;</div>No closed trades yet</div>';
+
+  if(btn){btn.disabled=false;btn.textContent='&#8635;';}
+}
+
+
+function closePosition(id){
+  const price=prompt('Close/exit price ($)?');
+  if(!price||isNaN(price))return;
+  const trades=getTrades();
+  const t=trades.find(x=>x.id===id);
+  if(!t)return;
+  t.status='CLOSED';t.closePrice=parseFloat(price);
+  t.closeDate=new Date().toISOString().split('T')[0];
+  saveTrades(trades);refreshPortfolio();
+  toast('Position closed at $'+price);
+}
+
+
+// ── Import existing holdings ──
+function openImport(acc='A'){
+  document.getElementById('imp_acc').value=acc;
+  document.getElementById('imp_tick').value='';
+  document.getElementById('imp_val').value='';
+  document.getElementById('imp_pnl').value='';
+  document.getElementById('imp_stop').value='';
+  document.getElementById('imp_t1').value='';
+  document.getElementById('imp_t2').value='';
+  document.getElementById('imp_t3').value='';
+  document.getElementById('imp_thesis').value='';
+  document.getElementById('imp_date').value=new Date().toISOString().split('T')[0];
+  setPnlType('profit');
+  document.getElementById('imp_pnl_currency').value='GBP';
+  document.getElementById('imp_fx_row').style.display='none';
+  document.getElementById('importOv').classList.remove('hidden');
+}
+function closeImport(){ document.getElementById('importOv').classList.add('hidden'); }
+
+let _pnlType = 'profit';
+function setPnlType(type){
+  _pnlType = type;
+  const pb = document.getElementById('pnlBtnProfit');
+  const lb = document.getElementById('pnlBtnLoss');
+  if(type==='profit'){
+    pb.style.borderColor='var(--gbdr)';pb.style.background='var(--gdim)';pb.style.color='var(--g)';
+    lb.style.borderColor='var(--b3)';lb.style.background='transparent';lb.style.color='var(--t3)';
+  } else {
+    lb.style.borderColor='var(--rbdr)';lb.style.background='var(--rdim)';lb.style.color='var(--rd)';
+    pb.style.borderColor='var(--b3)';pb.style.background='transparent';pb.style.color='var(--t3)';
+  }
+}
+
+function onPnlCurrencyChange(){
+  const isusd = document.getElementById('imp_pnl_currency').value==='USD';
+  document.getElementById('imp_fx_row').style.display = isusd ? 'block' : 'none';
+}
+
+function saveImport(){
+  const tick  = document.getElementById('imp_tick').value.trim().toUpperCase();
+  const acc   = document.getElementById('imp_acc').value;
+  const curVal= parseFloat(document.getElementById('imp_val').value);
+  const pnlAmt= parseFloat(document.getElementById('imp_pnl').value)||0;
+  const stop  = parseFloat(document.getElementById('imp_stop').value)||null;
+  const t1    = parseFloat(document.getElementById('imp_t1').value)||null;
+  const t2    = parseFloat(document.getElementById('imp_t2').value)||null;
+  const t3    = parseFloat(document.getElementById('imp_t3').value)||null;
+  const thesis= document.getElementById('imp_thesis').value.trim();
+  const date  = document.getElementById('imp_date').value;
+
+  if(!tick||!curVal){ toast('Ticker and current value required','warn'); return; }
+
+  // Calculate original cost from current value and P&L
+  const pnlCurrency = document.getElementById('imp_pnl_currency').value;
+  const fxRate = parseFloat(document.getElementById('imp_fx').value)||0.79;
+  const pnlInGBP = pnlCurrency==='USD' ? pnlAmt * fxRate : pnlAmt;
+  const signedPnl = _pnlType==='profit' ? pnlInGBP : -pnlInGBP;
+  const originalCost = curVal - signedPnl;
+
+  // Use curVal as fake entry so price % calc starts from today
+  const trades = getTrades();
+  trades.unshift({
+    id: Date.now(),
+    ticker: tick, action: 'BUY', account: acc,
+    entryPrice: 1,         // placeholder — not used for imported
+    sizeGBP: originalCost, // original cost
+    importedVal: curVal,   // current value at import
+    importedPnl: signedPnl,
+    stopLoss: stop,
+    target1: t1, target2: t2, target3: t3,
+    thesis, thesisExit: '',
+    date: date||new Date().toISOString().split('T')[0],
+    status: 'OPEN', closePrice: null,
+    imported: true,
+  });
+  saveTrades(trades);
+  closeImport();
+  toast('Added: '+tick+' to Account '+acc);
+  refreshPortfolio();
+}
+
+
+// ── Q&A dual mode: AI research or user input ──
+async function qaWebSearch(i){
+  const q=pQs[i];
+  const btn=document.getElementById('qabtn_web'+i);
+  const resultDiv=document.getElementById('qa_web_result'+i);
+  btn.disabled=true;btn.textContent='Searching...';
+  resultDiv.style.display='block';
+  resultDiv.innerHTML='<span style="color:var(--t3);font-style:italic;">&#127760; Searching the web and verifying sources...</span>';
+  try{
+    const r=await fetch('/api/claude',{
+      method:'POST',headers:{'Content-Type':'application/json'},
+      body:JSON.stringify({
+        model:'claude-sonnet-4-20250514',max_tokens:600,
+        use_web_search:true,
+        messages:[{role:'user',content:
+          `Research this question using web search. Be factual and specific. Always cite your exact sources.
+
+Question: ${q}
+
+Context from article being analysed: "${pOrig.substring(0,500)}..."
+
+Instructions:
+- Answer directly in 3-5 sentences with specific facts, numbers, dates
+- Only state what you can verify from sources you actually found
+- If conflicting information exists, say so
+- End with: SOURCES: list each source as "Publication (date) — headline or URL"
+
+Be honest about uncertainty. Never invent facts.`
+        }]
+      })
+    });
+    const d=await r.json();
+    if(d.error)throw new Error(d.error.message);
+    const text=d._extracted_text||d.content?.filter(b=>b.type==='text').map(b=>b.text).join('\n')||'';
+    if(!text)throw new Error('No response');
+    // Split answer from sources
+    const parts=text.split(/SOURCES:/i);
+    let html=`<div style="margin-bottom:8px;">${parts[0].trim().replace(/\n/g,'<br>')}</div>`;
+    if(parts[1]){
+      html+=`<div style="padding:7px 9px;background:var(--bg2);border-left:2px solid var(--gbdr);border-radius:0 4px 4px 0;margin-top:6px;">
+        <div style="font-size:7px;letter-spacing:2px;text-transform:uppercase;color:var(--g);font-weight:600;margin-bottom:4px;">&#10003; VERIFIED SOURCES</div>
+        <div style="font-size:9px;color:var(--t2);line-height:1.7;">${parts[1].trim().replace(/\n/g,'<br>')}</div>
+      </div>`;
+    } else {
+      html+=`<div style="font-size:8px;color:var(--am);margin-top:4px;">&#9888; No sources cited — treat with caution</div>`;
+    }
+    resultDiv.innerHTML=html;
+    resultDiv.dataset.answer=text;
+    btn.disabled=false;btn.textContent='&#10003; Researched';
+    btn.style.borderColor='var(--gbdr)';btn.style.color='var(--g)';
+  }catch(e){
+    resultDiv.innerHTML=`<span style="color:var(--rd);">Search failed: ${e.message} — use I'll Answer instead</span>`;
+    btn.disabled=false;btn.textContent='&#127760; Retry';
+  }
+}
+
+function qaShowInput(i){
+  const input = document.getElementById('qa'+i);
+  const webResult = document.getElementById('qa_web_result'+i);
+  const btn = document.getElementById('qabtn_me'+i);
+  input.style.display='block';
+  input.focus();
+  btn.style.borderColor='var(--gbdr)';
+  btn.style.color='var(--g)';
+  // Keep web result visible if already researched
+}
+
+
+function timeSince(d){const s=Math.floor((new Date()-d)/1000);if(s<60)return s+'s ago';const m=Math.floor(s/60);if(m<60)return m+'m ago';const h=Math.floor(m/60);if(h<24)return h+'h ago';return Math.floor(h/24)+'d ago';}
+</script>
+</body>
+</html>
