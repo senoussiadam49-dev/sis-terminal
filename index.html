@@ -435,13 +435,52 @@ body{background:var(--bg);color:var(--t1);font-family:var(--mono);min-height:100
 
 </div>
 
+<!-- KNOWLEDGE -->
+<div class="panel" id="panel-knowledge">
+<div style="padding-top:12px;">
+  <div class="ph">
+    <div><div class="pt">KNOW<span>LEDGE</span></div><div class="ps">Strategies &#183; Rules &#183; Market context &#183; Claude reads before every analysis</div></div>
+    <button class="btn btn-g btn-sm" onclick="saveKnowledge()" id="btnKSave">SAVE</button>
+  </div>
+
+  <!-- Upload / paste area -->
+  <div class="card">
+    <div class="ct">Add Knowledge</div>
+    <div style="margin-bottom:8px;">
+      <div class="mkl">Title</div>
+      <input type="text" class="field" id="kTitle" placeholder="e.g. Signal-Driven Momentum Strategy v2">
+    </div>
+    <div style="margin-bottom:8px;">
+      <div class="mkl">Content <span style="color:var(--t4);font-size:7px;">paste strategy text, rules, or notes</span></div>
+      <textarea class="field" id="kContent" rows="8" style="resize:vertical;min-height:160px;font-size:11px;line-height:1.6;" placeholder="Paste your strategy document, trading rules, market context, or any information you want Claude to always know before analysing signals..."></textarea>
+    </div>
+    <div style="display:flex;gap:7px;">
+      <button class="btn btn-g" style="flex:1;" onclick="saveKnowledge()">&#10011; ADD TO KNOWLEDGE BASE</button>
+      <label class="btn btn-gh btn-sm" style="cursor:pointer;">
+        &#128196; UPLOAD PDF
+        <input type="file" id="kFile" accept=".pdf,.txt,.md" style="display:none;" onchange="uploadKnowledgeFile(this)">
+      </label>
+    </div>
+  </div>
+
+  <!-- Stored knowledge items -->
+  <div class="card">
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px;">
+      <div class="ct" style="margin-bottom:0;">Knowledge Base</div>
+      <span style="font-size:8px;color:var(--t3);" id="kCount">0 items</span>
+    </div>
+    <div id="kList"><div class="empty"><div class="ei">&#128218;</div>No knowledge added yet</div></div>
+  </div>
+</div>
+</div>
+
 <div class="bnav">
   <button class="nb active" onclick="nav('terminal')" id="nav-terminal"><div class="nbi"></div><div class="ni">&#128225;</div><div class="nl">Terminal</div></button>
   <button class="nb" onclick="nav('news')" id="nav-news"><div class="nbi"></div><div class="ni">&#128308;</div><div class="nl">Signals</div></button>
   <button class="nb" onclick="nav('paste')" id="nav-paste"><div class="nbi"></div><div class="ni">&#128203;</div><div class="nl">Paste</div></button>
   <button class="nb" onclick="nav('chat')" id="nav-chat"><div class="nbi"></div><div class="ni">&#128172;</div><div class="nl">Chat</div></button>
   <button class="nb" onclick="nav('portfolio')" id="nav-portfolio"><div class="nbi"></div><div class="ni">&#128200;</div><div class="nl">Portfolio</div></button>
-  <button class="nb" onclick="nav('analyser')" id="nav-analyser"><div class="nbi"></div><div class="ni">&#9889;</div><div class="nl">Analyse</div></button>
+  <button class="nb" onclick="nav('knowledge')" id="nav-knowledge"><div class="nbi"></div><div class="ni">&#128218;</div><div class="nl">Knowledge</div></button>
 </div>
 
 <div class="modal-ov hidden" id="mOv" onclick="cmOut(event)">
@@ -1377,6 +1416,10 @@ async function startPaste(){
   await triggerSignalQA(fakeSig);
 }
 
+// Store messages for copy buttons
+const _msgStore = {};
+let _msgIdx = 0;
+
 function renderResearchMsg(role, text){
   const isUser = role === 'user';
   const label = isUser ? 'You' : 'SIS Analyst';
@@ -1384,20 +1427,31 @@ function renderResearchMsg(role, text){
   const bg = isUser ? 'var(--bg3)' : 'var(--bg2)';
   const border = isUser ? 'var(--b3)' : 'var(--b2)';
   
-  // Check if it contains a Gemini prompt (starts with "For these tickers" or similar)
-  const hasGeminiPrompt = text.includes('For these tickers') || text.includes('Please provide') || text.length > 400;
+  // Store text by index to avoid embedding it in onclick
+  const msgId = 'msg_' + (++_msgIdx);
+  _msgStore[msgId] = text;
   
-  let copyBtn = '';
-  if(!isUser && hasGeminiPrompt){
-    const escaped = JSON.stringify(text);
-    copyBtn = `<button class="btn btn-g btn-sm" onclick="navigator.clipboard.writeText(${escaped});toast('Copied — paste into Gemini')" style="margin-top:8px;font-size:8px;">&#10011; COPY GEMINI PROMPT</button>`;
-  }
+  // Show copy button for Claude messages that are long enough to be a Gemini prompt
+  const hasGeminiPrompt = !isUser && text.length > 200;
+  const copyBtn = hasGeminiPrompt
+    ? `<button class="btn btn-g btn-sm" onclick="copyMsg('${msgId}')" style="margin-top:8px;font-size:8px;">&#10011; COPY GEMINI PROMPT</button>`
+    : '';
+  
+  // Escape text for safe HTML display
+  const safeText = text.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
   
   return `<div style="margin-bottom:10px;animation:fi .18s ease;">
     <div style="font-size:7px;letter-spacing:2px;text-transform:uppercase;color:${color};margin-bottom:4px;">${label}</div>
-    <div style="background:${bg};border:1px solid ${border};border-radius:8px;padding:10px 12px;font-size:11px;line-height:1.7;font-family:var(--sans);color:var(--t1);white-space:pre-wrap;">${text}</div>
+    <div style="background:${bg};border:1px solid ${border};border-radius:8px;padding:10px 12px;font-size:11px;line-height:1.7;font-family:var(--sans);color:var(--t1);white-space:pre-wrap;">${safeText}</div>
     ${copyBtn}
   </div>`;
+}
+
+function copyMsg(msgId){
+  const text = _msgStore[msgId];
+  if(!text) return;
+  navigator.clipboard.writeText(text);
+  toast('Copied — paste into Gemini');
 }
 
 async function sendResearch(){
@@ -1456,7 +1510,7 @@ async function getVerdict(){
     `${m.role === 'user' ? 'TRADER' : 'ANALYST'}: ${m.content}`
   ).join('\n\n');
   try{
-    const resp=await claude([{role:'user',content:`${SYS}\n\nOriginal signal:\n"${pOrig}"\n\nResearch session (Gemini data + observations):\n${researchContext}\n\nThe research session above contains all the data gathered. Use the Gemini data as raw inputs only — prices, fundamentals, fundamentals. Apply your own analysis framework completely independently.
+    const resp=await claude([{role:'user',content:`${SYS}${getKnowledgeContext()}\n\nOriginal signal:\n"${pOrig}"\n\nResearch session (Gemini data + observations):\n${researchContext}\n\nThe research session above contains all the data gathered. Use the Gemini data as raw inputs only — prices, fundamentals, fundamentals. Apply your own analysis framework completely independently.
 
 This is the ONE AND ONLY analysis. Be definitive. Pick a single verdict and defend it fully.
 
@@ -1529,7 +1583,7 @@ async function sendChat(){
   if(!msg)return;inp.value='';ar(inp);addMsg('u',msg);chatHist.push({role:'user',content:msg});
   document.getElementById('cSend').disabled=true;const tid=addTyping();
   try{
-    const resp=await claude(chatHist,SYS);
+    const resp=await claude(chatHist, SYS+getKnowledgeContext());
     rmTyping(tid);addMsg('c',resp);chatHist.push({role:'assistant',content:resp});
     if(chatHist.length>20)chatHist=chatHist.slice(-16);
   }catch(e){rmTyping(tid);addMsg('c','Error: '+e.message);}
@@ -1565,7 +1619,7 @@ async function runAnalysis(){
   const ms=['Scanning...','Signal framework...','Magic Formula...','Trade plan...','Conviction...'];
   let mi=0;const lt=setInterval(()=>{document.getElementById('aLT').textContent=ms[++mi%ms.length];},1400);
   try{
-    const resp=await claude([{role:'user',content:`TICKER: ${t}\nACCOUNT: ${ac}${ac==='B'?' (BROTHER\'S CAPITAL)':''}\nTIMEFRAME: ${tm}\nCONTEXT: ${cx||'Use knowledge of '+t+' and current macro.'}\n\n## VERDICT\n## THE THREE QUESTIONS\n## FUTURE STATE (6M/12M/36M)\n## SIGNAL ALIGNMENT\n## MAGIC FORMULA QUALITY\n## ENTRY STRATEGY\n## STOP LOSS\n## PROFIT TARGETS\n## THESIS EXIT TRIGGERS\n## TOP RISKS\n## ANALYST'S VERDICT`}],SYS);
+    const resp=await claude([{role:'user',content:`${getKnowledgeContext()}\n\nTICKER: ${t}\nACCOUNT: ${ac}${ac==='B'?' (BROTHER\'S CAPITAL)':''}\nTIMEFRAME: ${tm}\nCONTEXT: ${cx||'Use knowledge of '+t+' and current macro.'}\n\n## VERDICT\n## THE THREE QUESTIONS\n## FUTURE STATE (6M/12M/36M)\n## SIGNAL ALIGNMENT\n## MAGIC FORMULA QUALITY\n## ENTRY STRATEGY\n## STOP LOSS\n## PROFIT TARGETS\n## THESIS EXIT TRIGGERS\n## TOP RISKS\n## ANALYST'S VERDICT`}],SYS);
     renderA(t,resp,ac);
   }catch(e){document.getElementById('aOut').innerHTML=`<div class="err">Failed: ${e.message}</div>`;}
   finally{clearInterval(lt);document.getElementById('aLoad').style.display='none';btn.disabled=false;btn.textContent='&#9889; RUN FULL ANALYSIS';}
@@ -2034,6 +2088,132 @@ function qaShowInput(i){
 
 
 function timeSince(d){const s=Math.floor((new Date()-d)/1000);if(s<60)return s+'s ago';const m=Math.floor(s/60);if(m<60)return m+'m ago';const h=Math.floor(m/60);if(h<24)return h+'h ago';return Math.floor(h/24)+'d ago';}
+
+// ═══════════════════════════════════════
+// KNOWLEDGE BASE
+// ═══════════════════════════════════════
+
+function getKnowledge(){ return JSON.parse(localStorage.getItem('sis_knowledge')||'[]'); }
+function saveKnowledgeDB(items){ localStorage.setItem('sis_knowledge',JSON.stringify(items)); }
+
+function saveKnowledge(){
+  const title = document.getElementById('kTitle').value.trim();
+  const content = document.getElementById('kContent').value.trim();
+  if(!title||!content){ toast('Title and content required','warn'); return; }
+  
+  const items = getKnowledge();
+  items.unshift({
+    id: Date.now(),
+    title,
+    content,
+    date: new Date().toLocaleDateString('en-GB'),
+    chars: content.length
+  });
+  saveKnowledgeDB(items);
+  document.getElementById('kTitle').value='';
+  document.getElementById('kContent').value='';
+  renderKnowledge();
+  toast('Added to knowledge base: '+title);
+}
+
+function deleteKnowledge(id){
+  if(!confirm('Remove this from knowledge base?'))return;
+  saveKnowledgeDB(getKnowledge().filter(k=>k.id!==id));
+  renderKnowledge();
+  toast('Removed');
+}
+
+function renderKnowledge(){
+  const items = getKnowledge();
+  const count = document.getElementById('kCount');
+  if(count) count.textContent = items.length+' item'+(items.length!==1?'s':'');
+  
+  const list = document.getElementById('kList');
+  if(!list)return;
+  
+  if(!items.length){
+    list.innerHTML='<div class="empty"><div class="ei">&#128218;</div>No knowledge added yet</div>';
+    return;
+  }
+  
+  list.innerHTML = items.map(k=>`
+    <div style="padding:10px 0;border-bottom:1px solid var(--b1);">
+      <div style="display:flex;align-items:flex-start;justify-content:space-between;margin-bottom:4px;">
+        <div>
+          <div style="font-size:13px;font-weight:600;color:#fff;font-family:var(--sans);">${k.title}</div>
+          <div style="font-size:8px;color:var(--t3);margin-top:2px;">${k.date} &#183; ${k.chars.toLocaleString()} chars</div>
+        </div>
+        <button class="btn btn-gh btn-sm" onclick="deleteKnowledge(${k.id})" style="color:var(--rd);border-color:var(--rbdr);font-size:8px;">&#10005;</button>
+      </div>
+      <div style="font-size:9px;color:var(--t2);font-family:var(--sans);line-height:1.5;background:var(--bg3);border-radius:4px;padding:6px 8px;max-height:60px;overflow:hidden;">
+        ${k.content.substring(0,200)}${k.content.length>200?'...':''}
+      </div>
+    </div>
+  `).join('');
+}
+
+async function uploadKnowledgeFile(input){
+  const file = input.files[0];
+  if(!file)return;
+  
+  const btn = document.querySelector('label[for="kFile"]') || document.querySelector('.btn-gh');
+  toast('Reading '+file.name+'...');
+  
+  try{
+    let text = '';
+    if(file.type === 'application/pdf'){
+      // For PDF, use FileReader to get base64 and send to Claude to extract text
+      const reader = new FileReader();
+      reader.onload = async (e)=>{
+        const base64 = e.target.result.split(',')[1];
+        toast('Extracting text from PDF...');
+        try{
+          const r = await fetch('/api/claude',{
+            method:'POST',headers:{'Content-Type':'application/json'},
+            body:JSON.stringify({
+              model:'claude-sonnet-4-20250514',max_tokens:4000,
+              messages:[{role:'user',content:[
+                {type:'document',source:{type:'base64',media_type:'application/pdf',data:base64}},
+                {type:'text',text:'Extract all text from this document. Return only the text content, no commentary.'}
+              ]}]
+            })
+          });
+          const d = await r.json();
+          const extracted = d._extracted_text || d.content?.filter(b=>b.type==='text').map(b=>b.text).join('\n')||'';
+          document.getElementById('kTitle').value = file.name.replace('.pdf','');
+          document.getElementById('kContent').value = extracted;
+          toast('PDF extracted — review and save');
+        }catch(e){ toast('PDF extraction failed: '+e.message,'err'); }
+      };
+      reader.readAsDataURL(file);
+    } else {
+      // Plain text or markdown
+      const reader = new FileReader();
+      reader.onload = (e)=>{
+        document.getElementById('kTitle').value = file.name.replace(/\.[^.]+$/,'');
+        document.getElementById('kContent').value = e.target.result;
+        toast('File loaded — review and save');
+      };
+      reader.readAsText(file);
+    }
+  }catch(e){ toast('File read error: '+e.message,'err'); }
+  input.value='';
+}
+
+function getKnowledgeContext(){
+  const items = getKnowledge();
+  if(!items.length) return '';
+  return '\n\n═══ KNOWLEDGE BASE ═══\n' + 
+    items.map(k=>`[${k.title}]\n${k.content.substring(0,3000)}${k.content.length>3000?'\n...(truncated)':''}`).join('\n\n---\n') +
+    '\n═══ END KNOWLEDGE BASE ═══';
+}
+
+// Initialise on load
+window.addEventListener('DOMContentLoaded',()=>{
+  // Render knowledge on load (after existing DOMContentLoaded)
+  setTimeout(renderKnowledge, 100);
+});
+
 </script>
 </body>
 </html>
